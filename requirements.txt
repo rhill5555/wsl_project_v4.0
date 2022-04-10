@@ -1,0 +1,4 @@
+mysql
+pymysql
+sqlalchemy
+pyqt

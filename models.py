@@ -1,18 +1,32 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, create_engine, UniqueConstraint, select, \
-    ForeignKeyConstraint
-from sqlalchemy.orm import relationship, backref, sessionmaker
+# Filename: models.py
+# This contains Metadata Table Objects
+# And Add to Table logic
+########################################################################################################################
+# 1 - Imports
+from typing import Optional
+
+from sqlalchemy import Column, Integer, String, Date, Float
+from sqlalchemy import create_engine, select, ForeignKey
+from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
+########################################################################################################################
+# 2 - Connection to mysql and create base
 
+# 2.1 - Connection String
 conn_str = 'mysql+pymysql://Heather:#LAwaItly19@localhost:3306/wsl'
 
-# SQLAlchemy engine that will interact with mysql database
+# 2.2 - SQLAlchemy engine that will interact with mysql database
 engine = create_engine(conn_str, echo=True)
 
-# SQLAlchemy ORM session that binds to the engine
+# 2.3 - SQLAlchemy ORM session that binds to the engine
 Session = sessionmaker(bind=engine)
 
+# 2.4 - Base MetaData Object
 Base = declarative_base()
+
+########################################################################################################################
+# 3.0 - MetaData Table Object
 
 
 class Continent(Base):
@@ -29,8 +43,10 @@ class Continent(Base):
 class Country(Base):
     __tablename__ = 'country'
     country_id = Column(Integer, primary_key=True)
-    continent_id = Column(Integer, ForeignKey('continent.continent_id'), nullable=False)
     country = Column(String(length=50))
+    continent_id = Column(Integer, ForeignKey('continent.continent_id'), nullable=False)
+    regions = relationship("Region")
+    surfers = relationship("Surfers")
 
     def __repr__(self):
         return f"Country(id={self.country_id!r}, " \
@@ -38,10 +54,122 @@ class Country(Base):
                f"name={self.country!r})"
 
 
+class Region(Base):
+    __tablename__ = 'region'
+    region_id = Column(Integer, primary_key=True)
+    region = Column(String(length=50))
+    country_id = Column(Integer, ForeignKey('country.country_id'), nullable=False)
+    cities = relationship("City")
+    break_names = relationship("Break")
+
+    def __repr__(self):
+        return f"Region(id={self.region_id!r}, " \
+               f"country_id={self.country_id!r}, " \
+               f"name={self.region!r}"
+
+
+class City(Base):
+    __tablename__ = 'city'
+    city_id = Column(Integer, primary_key=True)
+    city = Column(String(length=50))
+    region_id = Column(Integer, ForeignKey('region.region_id'), nullable=False)
+    surfers = relationship("Surfers")
+
+    def __repr__(self):
+        return f"City(city_id={self.city_id!r}, " \
+               f"region_id={self.region_id!r}, " \
+               f"name={self.city!r}"
+
+
+class Break(Base):
+    __tablename__ = 'break'
+    break_id = Column(Integer, primary_key=True)
+    break_name = Column(String(50))
+    break_type = Column(String(length=32))
+    reliability = Column(String(length=32))
+    ability = Column(String(length=32))
+    shoulder_burn = Column(String(length=32))
+    clean = Column(Float)
+    blown_out = Column(Float)
+    too_small = Column(Float)
+    region_id = Column(Integer, ForeignKey('region.region_id'), nullable=False)
+
+    def __repr__(self):
+        return f"Break(break_id={self.break_id!r}, " \
+               f"break_name={self.break_name!r}, " \
+               f"break_type={self.break_type!r}, " \
+               f"reliability={self.reliability!r}, " \
+               f"ability={self.ability!r}, " \
+               f"shoulder_burn={self.shoulder_burn!r}, " \
+               f"clean={self.clean!r}, " \
+               f"blown_out={self.blown_out!r}, " \
+               f"too_small={self.too_small!r}, " \
+               f"region_id={self.region_id!r}"
+
+
+class Surfers(Base):
+    __tablename__ = 'surfers'
+    surfer_id = Column(Integer, primary_key=True)
+    gender = Column(String(length=6))
+    first_name = Column(String(length=50))
+    last_name = Column(String(length=50))
+    stance = Column(String(length=10))
+    rep_country_id = Column(Integer, ForeignKey('country.country_id'), nullable=False)
+    birthday = Column(Date)
+    height = Column(Integer)
+    weight = Column(Integer)
+    first_season = Column(Integer)
+    first_tour = Column(String(length=50))
+    home_city_id = Column(Integer, ForeignKey('city.city', nullable=False))
+
+    def __repr__(self):
+        return f"surfer_id={self.surfer_id!r}, " \
+               f"gender={self.gender!r}, " \
+               f"first_name={self.first_name!r}, " \
+               f"last_name={self.last_name!r}, " \
+               f"stance={self.stance!r}, " \
+               f"rep_country_id={self.rep_country_id!r}, " \
+               f"birthday={self.birthday!r}, " \
+               f"height={self.height!r}, " \
+               f"weight={self.weight!r}, " \
+               f"first_season={self.first_season!r}, " \
+               f"first_tour={self.first_tour!r}, " \
+               f"home_city_id={self.home_city_id!r}"
+
+
+class Tour(Base):
+    __tablename__ = 'tour'
+    tour_id = Column(Integer, primary_key=True)
+    year = Column(Integer)
+    gender = Column(String(length=6))
+    tour_type = Column(String(length=50), nullable=False)
+    tour_name = Column(String(length=50), nullable=False)
+
+    def __repr__(self):
+        return f"tour_id={self.tour_id!r}, " \
+               f"year={self.year!r}, " \
+               f"gender={self.gender!r}, " \
+               f"tour_type={self.tour_type!r}, " \
+               f"tour_name={self.tour_name!r}"
+
+
+
+
+
+########################################################################################################################
+# 4.0 - Table Manipulation
+
+
 class AddToTable:
-    def __init__(self, entered_continent: str, entered_country: str):
+    def __init__(self,
+                 entered_continent: str,
+                 entered_country: str,
+                 entered_region: Optional[str] = None,
+                 entered_city: Optional[str] = None):
         self.entered_continent = entered_continent
         self.entered_country = entered_country
+        self.entered_region: Optional[str] = entered_region
+        self.entered_city: Optional[str] = entered_city
 
     def add_new_country(self):
         session = Session()
@@ -70,75 +198,111 @@ class AddToTable:
         session.flush()
         session.commit()
 
+    def add_new_region(self):
+        session = Session()
 
-# def add_new_country(session, entered_continent, entered_country):
-#
-#     # Check if entered_country exists
-#     entered_country = (
-#         session.query(Country)
-#         .join(Continent)
-#         .filter(Country.entered_country == entered_country)
-#         .filter(
-#             and_(
-#                 Continent.entered_continent == entered_continent
-#             )
-#         )
-#         .one_or_none()
-#     )
-#
-#     # Does the entered_country exist in the entered_continent
-#     if entered_country is not None:
-#         return
-#
-#     # Get the entered_country in the entered_continent
-#     entered_country = (
-#         session.query(Country)
-#         .join(Continent)
-#         .filter(Country.entered_country == entered_country)
-#         .filter(
-#             and_(
-#                 Continent.entered_continent == entered_continent
-#             )
-#         )
-#         .one_or_none()
-#     )
-#     # Create new entered_country if needed
-#     if entered_country is None:
-#         entered_country = Country(entered_country=entered_country)
-#
-#     # Get the Continent
-#     entered_continent = (
-#         session.query(Continent)
-#         .filter(
-#             and_(
-#                 Continent.entered_continent == entered_continent
-#             )
-#         )
-#         .one_or_none()
-#     )
-#     # Do we need to create the entered_continent
-#     if entered_continent is None:
-#         entered_continent = Continent(entered_continent == entered_continent)
-#         session.add(entered_continent)
-#
-#     # Initialize the entered_country relationships
-#     entered_country.entered_continent = entered_continent
-#     session.add(entered_country)
-#
-#     # Commit to the database
-#     session.commit()
-#
-#
+        # Since entered_region is not required check to see if it has been entered
+        if self.entered_region is None:
+            print(f"You didn't enter a region.")
+            return
+
+        self.add_new_country()
+
+        # Check to see if the entered_region exists
+        query = (select(Region.region)
+                 .where(Region.region == self.entered_region)
+                 )
+        result = session.execute(query)
+        check_region = result.scalar()
+
+        # Does the entered_region exist in the entered_continent
+        if check_region is not None:
+            print(f"The region of {self.entered_region} "
+                  f"in the country of {self.entered_country} has already been discovered.")
+            return
+
+        # Get country_idfrom continent table
+        query = (select(Country.country_id)
+                 .where(Country.country == self.entered_country))
+        result = session.execute(query)
+        entered_country_id = result.scalar()
+
+        new_region = Region(country_id=entered_country_id, region=self.entered_region)
+
+        session.add(new_region)
+        session.flush()
+        session.commit()
+
+    def add_new_city(self):
+        session = Session()
+
+        # Since entered_region is not required check to see if it has been entered
+        if self.entered_region is None:
+            print('')
+            print(f"You didn't enter a region.")
+            print('')
+            return
+
+        # Since entered_city is not required check to see if it has been entered
+        if self.entered_city is None:
+            print('')
+            print(f"You didn't enter a city.")
+            print('')
+            return
+
+        # Add Country and Region if necessary
+        self.add_new_region()
+
+        # Check to see if the entered_region exists
+        query = (select(City.city)
+                 .where(City.city == self.entered_city)
+                 )
+        result = session.execute(query)
+        check_city = result.scalar()
+
+        # Does the entered_region exist in the entered_continent
+        if check_city is not None:
+            print('')
+            print(f"The city of {self.entered_city} "
+                  f"in {self.entered_region}, {self.entered_country} has already been discovered.")
+            print('')
+            return
+
+        # Get city_id from continent table
+        query = (select(Region.region_id)
+                 .where(Region.region == self.entered_region))
+        result = session.execute(query)
+        entered_region_id = result.scalar()
+
+        new_city = City(region_id=entered_region_id, city=self.entered_city)
+
+        session.add(new_city)
+        session.flush()
+        session.commit()
 
 ########################################################################################################################
+# 5.0 - Testing
 
 # # Enter a New Continent
 # inst = Continent(entered_continent="Unknown")
 # inst.add_new_continent()
 
-# Enter a New Country
-inst = AddToTable(entered_continent='Oceania', entered_country="Australia")
-inst.add_new_country()
+# # Enter a New Country
+# inst = AddToTable(entered_continent='Oceania', entered_country="Australia")
+# inst.add_new_country()
+
+# # Enter a New Region
+# inst = AddToTable(entered_continent='North America',
+#                   entered_country='Hawaii',
+#                   entered_region='Oahu')
+#
+# inst.add_new_region()
 
 
-
+# # Enter a New City
+# inst = AddToTable(entered_continent='North America',
+#                   entered_country='Hawaii',
+#                   entered_region='Oahu',
+#                   entered_city='North Shore')
+#
+# inst.add_new_city()

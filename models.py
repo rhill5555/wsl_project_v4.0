@@ -85,6 +85,7 @@ class Break(Base):
     __tablename__ = 'break'
     break_id = Column(Integer, primary_key=True)
     break_name = Column(String(50))
+    region_id = Column(Integer, ForeignKey('region.region_id'), nullable=False)
     break_type = Column(String(length=32))
     reliability = Column(String(length=32))
     ability = Column(String(length=32))
@@ -92,11 +93,11 @@ class Break(Base):
     clean = Column(Float)
     blown_out = Column(Float)
     too_small = Column(Float)
-    region_id = Column(Integer, ForeignKey('region.region_id'), nullable=False)
 
     def __repr__(self):
         return f"Break(break_id={self.break_id!r}, " \
                f"break_name={self.break_name!r}, " \
+               f"region_id={self.region_id!r} ", \
                f"break_type={self.break_type!r}, " \
                f"reliability={self.reliability!r}, " \
                f"ability={self.ability!r}, " \
@@ -104,7 +105,7 @@ class Break(Base):
                f"clean={self.clean!r}, " \
                f"blown_out={self.blown_out!r}, " \
                f"too_small={self.too_small!r}, " \
-               f"region_id={self.region_id!r}"
+
 
 
 class Surfers(Base):
@@ -120,7 +121,7 @@ class Surfers(Base):
     weight = Column(Integer)
     first_season = Column(Integer)
     first_tour = Column(String(length=50))
-    home_city_id = Column(Integer, ForeignKey('city.city', nullable=False))
+    home_city_id = Column(Integer, ForeignKey('city.city_id'), nullable=False)
 
     def __repr__(self):
         return f"surfer_id={self.surfer_id!r}, " \
@@ -152,24 +153,37 @@ class Tour(Base):
                f"tour_type={self.tour_type!r}, " \
                f"tour_name={self.tour_name!r}"
 
-
-
-
-
 ########################################################################################################################
 # 4.0 - Table Manipulation
 
 
-class AddToTable:
+class AddLocation:
     def __init__(self,
                  entered_continent: str,
                  entered_country: str,
                  entered_region: Optional[str] = None,
-                 entered_city: Optional[str] = None):
+                 entered_city: Optional[str] = None,
+                 entered_break_name: Optional[str] = None,
+                 entered_break_type: Optional[str] = None,
+                 entered_reliability: Optional[str] = None,
+                 entered_ability: Optional[str] = None,
+                 entered_shoulder_burn: Optional[str] = None,
+                 entered_clean: Optional[float] = 0,
+                 entered_blown_out: Optional[float] = 0,
+                 entered_too_small: Optional[float] = 0):
+
         self.entered_continent = entered_continent
         self.entered_country = entered_country
         self.entered_region: Optional[str] = entered_region
         self.entered_city: Optional[str] = entered_city
+        self.entered_break_name: Optional[str] = entered_break_name
+        self.entered_break_type: Optional[str] = entered_break_type
+        self.entered_reliability: Optional[str] = entered_reliability
+        self.entered_ability: Optional[str] = entered_ability
+        self.entered_shoulder_burn: Optional[str] = entered_shoulder_burn
+        self.entered_clean: Optional[float] = entered_clean
+        self.entered_blown_out: Optional[float] = entered_blown_out
+        self.entered_too_small: Optional[float] = entered_too_small
 
     def add_new_country(self):
         session = Session()
@@ -221,7 +235,7 @@ class AddToTable:
                   f"in the country of {self.entered_country} has already been discovered.")
             return
 
-        # Get country_idfrom continent table
+        # Get country_id from continent table
         query = (select(Country.country_id)
                  .where(Country.country == self.entered_country))
         result = session.execute(query)
@@ -253,7 +267,7 @@ class AddToTable:
         # Add Country and Region if necessary
         self.add_new_region()
 
-        # Check to see if the entered_region exists
+        # Check to see if the entered_cityexists
         query = (select(City.city)
                  .where(City.city == self.entered_city)
                  )
@@ -268,7 +282,7 @@ class AddToTable:
             print('')
             return
 
-        # Get city_id from continent table
+        # Get region_id from continent table
         query = (select(Region.region_id)
                  .where(Region.region == self.entered_region))
         result = session.execute(query)
@@ -280,19 +294,71 @@ class AddToTable:
         session.flush()
         session.commit()
 
+    def add_new_break(self):
+        session = Session()
+
+        # Since entered_region is not required check to see if it has been entered
+        if self.entered_region is None:
+            print('')
+            print(f"You didn't enter a region.")
+            print('')
+            return
+
+        # Since entered_break is not required check to see if it has been entered
+        if self.entered_break_name is None:
+            print('')
+            print(f"You didn't enter a break name.")
+            print('')
+            return
+
+        # Add Country and Region if necessary
+        self.add_new_region()
+
+        # Check to see if the entered_break exists
+        query = (select(Break.break_name)
+                 .where(Break.break_name == self.entered_break_name)
+                 )
+        result = session.execute(query)
+        check_break_name = result.scalar()
+
+        # Does the entered_region exist in the entered_continent
+        if check_break_name is not None:
+            print('')
+            print(f"The wave at {self.entered_break_name} "
+                  f"in {self.entered_region}, {self.entered_country} has already been discovered.")
+            print('')
+            return
+
+        # Get region_id from continent table
+        query = (select(Region.region_id)
+                 .where(Region.region == self.entered_region))
+        result = session.execute(query)
+        entered_region_id = result.scalar()
+
+        new_break = Break(break_name=self.entered_break_name,
+                          region_id=entered_region_id,
+                          break_type=self.entered_break_type,
+                          reliability=self.entered_reliability,
+                          ability=self.entered_ability,
+                          shoulder_burn=self.entered_shoulder_burn,
+                          clean=self.entered_clean,
+                          blown_out=self.entered_blown_out,
+                          too_small=self.entered_too_small)
+
+        session.add(new_break)
+        session.flush()
+        session.commit()
+
+
 ########################################################################################################################
 # 5.0 - Testing
 
-# # Enter a New Continent
-# inst = Continent(entered_continent="Unknown")
-# inst.add_new_continent()
-
 # # Enter a New Country
-# inst = AddToTable(entered_continent='Oceania', entered_country="Australia")
+# inst = AddLocation(entered_continent='Oceania', entered_country="Australia")
 # inst.add_new_country()
 
 # # Enter a New Region
-# inst = AddToTable(entered_continent='North America',
+# inst = AddLocation(entered_continent='North America',
 #                   entered_country='Hawaii',
 #                   entered_region='Oahu')
 #
@@ -300,9 +366,24 @@ class AddToTable:
 
 
 # # Enter a New City
-# inst = AddToTable(entered_continent='North America',
+# inst = AddLocation(entered_continent='North America',
 #                   entered_country='Hawaii',
 #                   entered_region='Oahu',
 #                   entered_city='North Shore')
 #
 # inst.add_new_city()
+
+# # Enter a New Break
+# inst = AddLocation(entered_continent='North America',
+#                    entered_country='Hawaii',
+#                    entered_region='Oahu',
+#                    entered_break_name='Pipeline',
+#                    entered_break_type='Reef',
+#                    entered_reliability='Consistent',
+#                    entered_ability=None,
+#                    entered_shoulder_burn=None,
+#                    entered_clean=44,
+#                    entered_blown_out=36,
+#                    entered_too_small=20)
+#
+# inst.add_new_break()

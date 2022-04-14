@@ -107,13 +107,12 @@ class Break(Base):
                f"too_small={self.too_small!r}, " \
 
 
-
 class Surfers(Base):
     __tablename__ = 'surfers'
     surfer_id = Column(Integer, primary_key=True)
-    gender = Column(String(length=6))
-    first_name = Column(String(length=50))
-    last_name = Column(String(length=50))
+    gender = Column(String(length=6), nullable=False)
+    first_name = Column(String(length=50), nullable=False)
+    last_name = Column(String(length=50), nullable=False)
     stance = Column(String(length=10))
     rep_country_id = Column(Integer, ForeignKey('country.country_id'), nullable=False)
     birthday = Column(Date)
@@ -350,6 +349,79 @@ class AddLocation:
         session.commit()
 
 
+class AddSurfer:
+    def __init__(self,
+                 entered_gender: str = None,
+                 entered_first_name: str = None,
+                 entered_last_name: str = None,
+                 entered_stance: str = None,
+                 entered_rep_country: str = None,
+                 entered_birthday=None,
+                 entered_height: int = None,
+                 entered_weight: int = None,
+                 entered_first_season: int = None,
+                 entered_first_tour: str = None,
+                 entered_home_city: str = None
+                 ):
+
+        self.entered_gender: str = entered_gender
+        self.entered_first_name: str = entered_first_name
+        self.entered_last_name: str = entered_last_name
+        self.entered_stance: str = entered_stance
+        self.entered_rep_country: str = entered_rep_country
+        self.entered_birthday = entered_birthday
+        self.entered_height: int = entered_height
+        self.entered_weight: int = entered_weight
+        self.entered_first_season: int = entered_first_season
+        self.entered_first_tour: str = entered_first_tour
+        self.entered_home_city: str = entered_home_city
+
+    def add_new_surfer(self):
+        session = Session()
+
+        # Check to see if the entered_continent exists
+        query = (select(Surfers.surfer_id)
+                 .where(Surfers.gender == self.entered_gender)
+                 .and_(Surfers.first_name == self.entered_first_name)
+                 .and_(Surfers.last_name == self.entered_last_name)
+                 .and_(Surfers.rep_country_id == self.entered_rep_country)
+                 )
+        result = session.execute(query)
+        check_surfer = result.scalar()
+
+        # Does the entered_country exist in the entered_continent
+        if check_surfer is not None:
+            print(f"{self.entered_first_name} {self.entered_last_name} of {self.entered_rep_country} has already been added.")
+            return
+
+        # Get country_id from the country table
+        query = (select(Country.country_id)
+                 .where(Country.country == self.entered_rep_country))
+        result = session.execute(query)
+        entered_country_id = result.scalar()
+
+        # Get city_id from the city table
+        query = (select(City.city_id)
+                 .where(City.city == self.entered_home_city))
+        result = session.execute(query)
+        entered_city_id = result.scalar()
+
+        new_surfer = Surfers(gender=self.entered_gender,
+                             first_name=self.entered_first_name,
+                             last_name=self.entered_last_name,
+                             stance=self.entered_stance,
+                             rep_country_id=entered_country_id,
+                             birthday=self.entered_birthday,
+                             height=self.entered_height,
+                             weight=self.entered_weight,
+                             first_season=self.entered_first_season,
+                             first_tour=self.entered_first_tour,
+                             home_city_id=entered_city_id)
+
+        session.add(new_surfer)
+        session.flush()
+        session.commit()
+
 ########################################################################################################################
 # 5.0 - Testing
 
@@ -387,3 +459,6 @@ class AddLocation:
 #                    entered_too_small=20)
 #
 # inst.add_new_break()
+
+# Enter a New Surfer
+inst = AddSurfer()

@@ -187,7 +187,17 @@ class AddLocation:
     def add_new_country(self):
         session = Session()
 
-        # Check to see if the entered_continent exists
+        # Check that country is entered
+        if self.entered_country is None or self.entered_country == '':
+            print(f"What country are you adding?")
+            return
+
+        # Check that continent is entered
+        if self.entered_continent is None or self.entered_continent == '':
+            print(f"What continent is {self.entered_country} on?")
+            return
+
+        # Check to see if the entered_country exists
         query = (select(Country.country)
                  .where(Country.country == self.entered_country)
                  )
@@ -214,8 +224,18 @@ class AddLocation:
     def add_new_region(self):
         session = Session()
 
+        # Check that country is entered
+        if self.entered_country is None or self.entered_country == '':
+            print(f"What country are you adding?")
+            return
+
+        # Check that continent is entered
+        if self.entered_continent is None or self.entered_continent == '':
+            print(f"What continent is {self.entered_country} on?")
+            return
+
         # Since entered_region is not required check to see if it has been entered
-        if self.entered_region is None:
+        if self.entered_region is None or self.entered_region == '':
             print(f"You didn't enter a region.")
             return
 
@@ -254,15 +274,25 @@ class AddLocation:
     def add_new_city(self):
         session = Session()
 
+        # Check that country is entered
+        if self.entered_country is None or self.entered_country == '':
+            print(f"What country are you adding?")
+            return
+
+        # Check that continent is entered
+        if self.entered_continent is None or self.entered_continent == '':
+            print(f"What continent is {self.entered_country} on?")
+            return
+
         # Since entered_region is not required check to see if it has been entered
-        if self.entered_region is None:
+        if self.entered_region is None or self.entered_region == '':
             print('')
             print(f"You didn't enter a region.")
             print('')
             return
 
         # Since entered_city is not required check to see if it has been entered
-        if self.entered_city is None:
+        if self.entered_city is None or self.entered_city == '':
             print('')
             print(f"You didn't enter a city.")
             print('')
@@ -311,15 +341,25 @@ class AddLocation:
     def add_new_break(self):
         session = Session()
 
+        # Check that country is entered
+        if self.entered_country is None or self.entered_country == '':
+            print(f"What country are you adding?")
+            return
+
+        # Check that continent is entered
+        if self.entered_continent is None or self.entered_continent == '':
+            print(f"What continent is {self.entered_country} on?")
+            return
+
         # Since entered_region is not required check to see if it has been entered
-        if self.entered_region is None:
+        if self.entered_region is None or self.entered_region == '':
             print('')
             print(f"You didn't enter a region.")
             print('')
             return
 
         # Since entered_break is not required check to see if it has been entered
-        if self.entered_break_name is None:
+        if self.entered_break_name is None or self.entered_break_name == '':
             print('')
             print(f"You didn't enter a break name.")
             print('')
@@ -467,7 +507,7 @@ class AddSurfer:
         entered_rep_country_id = result.scalar()
 
         # Get city_id from the city table
-        if self.entered_home_city is None:
+        if self.entered_home_city is None or self.entered_home_city == '':
             entered_city_id = None
         else:
             query = (select(City.city_id)
@@ -537,18 +577,18 @@ class AddSurfer:
 #
 # inst.add_new_break()
 
-# Enter a New Surfer
-inst = AddSurfer(entered_gender='Male',
-                 entered_first_name='John John',
-                 entered_last_name='Florence',
-                 entered_stance='Regular',
-                 entered_rep_country='Hawaii',
-                 entered_birthday='1992-10-18',
-                 entered_height=168,
-                 entered_weight=79,
-                 entered_first_season=2008,
-                 entered_first_tour='Qualifying Series',
-                 entered_home_country='Hawaii',
-                 entered_home_region='Oahu',
-                 entered_home_city='North Shore')
-inst.add_new_surfer()
+# # Enter a New Surfer
+# inst = AddSurfer(entered_gender='Male',
+#                  entered_first_name='John John',
+#                  entered_last_name='Florence',
+#                  entered_stance='Regular',
+#                  entered_rep_country='Hawaii',
+#                  entered_birthday='1992-10-18',
+#                  entered_height=168,
+#                  entered_weight=79,
+#                  entered_first_season=2008,
+#                  entered_first_tour='Qualifying Series',
+#                  entered_home_country='Hawaii',
+#                  entered_home_region='Oahu',
+#                  entered_home_city='North Shore')
+# inst.add_new_surfer()

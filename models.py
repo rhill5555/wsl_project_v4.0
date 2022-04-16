@@ -5,9 +5,9 @@
 # 1 - Imports
 from typing import Optional
 
-from sqlalchemy import Column, Integer, String, Date, Float
+from sqlalchemy import Column, Integer, String, Date, Float, and_
 from sqlalchemy import create_engine, select, ForeignKey
-from sqlalchemy.orm import relationship, sessionmaker
+from sqlalchemy.orm import relationship, sessionmaker, join
 from sqlalchemy.ext.declarative import declarative_base
 
 ########################################################################################################################
@@ -222,9 +222,14 @@ class AddLocation:
         self.add_new_country()
 
         # Check to see if the entered_region exists
-        query = (select(Region.region)
-                 .where(Region.region == self.entered_region)
-                 )
+        query = (select(Region.region_id)
+                 .join(Country, Region.country_id == Country.country_id)
+                 .where(
+                    and_(
+                        Region.region == self.entered_region,
+                        Country.country == self.entered_country
+                        )))
+
         result = session.execute(query)
         check_region = result.scalar()
 
@@ -266,10 +271,16 @@ class AddLocation:
         # Add Country and Region if necessary
         self.add_new_region()
 
-        # Check to see if the entered_cityexists
+        # Check to see if the entered_city exists
         query = (select(City.city)
-                 .where(City.city == self.entered_city)
-                 )
+                 .join(Region, City.region_id == Region.region_id)
+                 .join(Country, Region.country_id == Country.country_id)
+                 .where(and_(
+                            City.city == self.entered_city,
+                            Region.region == self.entered_region,
+                            Country.country == self.entered_country
+                 )))
+
         result = session.execute(query)
         check_city = result.scalar()
 
@@ -283,7 +294,11 @@ class AddLocation:
 
         # Get region_id from continent table
         query = (select(Region.region_id)
-                 .where(Region.region == self.entered_region))
+                 .join(Country, Country.country_id == Region.country_id)
+                 .where(and_(
+                             Region.region == self.entered_region,
+                             Country.country == self.entered_country
+                             )))
         result = session.execute(query)
         entered_region_id = result.scalar()
 
@@ -315,8 +330,14 @@ class AddLocation:
 
         # Check to see if the entered_break exists
         query = (select(Break.break_name)
-                 .where(Break.break_name == self.entered_break_name)
-                 )
+                 .join(Region, Region.region_id == Break.region_id)
+                 .join(Country, Country.country_id == Region.country_id)
+                 .where(and_(
+                             Break.break_name == self.entered_break_name,
+                             Region.region == self.entered_region,
+                             Country.country == self.entered_country
+                            )))
+
         result = session.execute(query)
         check_break_name = result.scalar()
 
@@ -330,7 +351,12 @@ class AddLocation:
 
         # Get region_id from continent table
         query = (select(Region.region_id)
-                 .where(Region.region == self.entered_region))
+                 .join(Country, Country.country_id == Region.country_id)
+                 .where(and_(
+                             Region.region == self.entered_region,
+                             Country.country == self.entered_country
+                            )))
+
         result = session.execute(query)
         entered_region_id = result.scalar()
 
@@ -354,42 +380,82 @@ class AddSurfer:
                  entered_gender: str = None,
                  entered_first_name: str = None,
                  entered_last_name: str = None,
-                 entered_stance: str = None,
+                 entered_stance: Optional[str] = None,
                  entered_rep_country: str = None,
-                 entered_birthday=None,
-                 entered_height: int = None,
-                 entered_weight: int = None,
-                 entered_first_season: int = None,
-                 entered_first_tour: str = None,
-                 entered_home_city: str = None
+                 entered_birthday: Optional = None,
+                 entered_height: Optional[int] = None,
+                 entered_weight: Optional[int] = None,
+                 entered_first_season: Optional[int] = None,
+                 entered_first_tour: Optional[str] = None,
+                 entered_home_country: Optional[str] = None,
+                 entered_home_region: Optional[str] = None,
+                 entered_home_city: Optional[str] = None
                  ):
 
         self.entered_gender: str = entered_gender
         self.entered_first_name: str = entered_first_name
         self.entered_last_name: str = entered_last_name
-        self.entered_stance: str = entered_stance
+        self.entered_stance: Optional[str] = entered_stance
         self.entered_rep_country: str = entered_rep_country
-        self.entered_birthday = entered_birthday
-        self.entered_height: int = entered_height
-        self.entered_weight: int = entered_weight
-        self.entered_first_season: int = entered_first_season
-        self.entered_first_tour: str = entered_first_tour
-        self.entered_home_city: str = entered_home_city
+        self.entered_birthday: Optional = entered_birthday
+        self.entered_height: Optional[int] = entered_height
+        self.entered_weight: Optional[int] = entered_weight
+        self.entered_first_season: Optional[int] = entered_first_season
+        self.entered_first_tour: Optional[str] = entered_first_tour
+        self.entered_home_country: Optional[str] = entered_home_country
+        self.entered_home_region: Optional[str] = entered_home_region
+        self.entered_home_city: Optional[str] = entered_home_city
 
     def add_new_surfer(self):
         session = Session()
 
-        # Check to see if the entered_continent exists
+        # Check that gender is entered
+        if self.entered_gender is None or self.entered_gender == '':
+            print(f"You have to choose a gender because of biology and shit.")
+            return
+
+        # Check that first_name is entered
+        if self.entered_first_name is None or self.entered_first_name == '':
+            print(f"What is the surfer's first name?")
+            return
+
+        # Check that last_name is entered
+        if self.entered_last_name is None or self.entered_last_name == '':
+            print(f"What is the surfer's last name?")
+            return
+
+        # Check that a rep country is entered
+        if self.entered_rep_country is None or self.entered_rep_country == '':
+            print(f"What country is the surfer representing?")
+            return
+
+        # If a home city is entered check that a home region is entered
+        city_is_entered = self.entered_home_city is not None
+        region_is_none = self.entered_home_region is None
+        region_is_empty = self.entered_home_region == ''
+        if city_is_entered and (region_is_none or region_is_empty):
+            print(f"What region is the surfer's home town in?")
+            return
+
+        # If a home city is entered check that a home country is entered
+        country_is_none = self.entered_home_country is None
+        country_is_empty = self.entered_home_country == ''
+        if city_is_entered and (country_is_none or country_is_empty):
+            print(f"What country is the surfer's home town in?")
+            return
+
+        # Check to see if the entered_surfer exists
         query = (select(Surfers.surfer_id)
-                 .where(Surfers.gender == self.entered_gender)
-                 .and_(Surfers.first_name == self.entered_first_name)
-                 .and_(Surfers.last_name == self.entered_last_name)
-                 .and_(Surfers.rep_country_id == self.entered_rep_country)
-                 )
+                 .join(Country, Country.country_id == Surfers.rep_country_id)
+                 .where(and_(
+                             Surfers.gender == self.entered_gender,
+                             Surfers.first_name == self.entered_first_name,
+                             Surfers.last_name == self.entered_last_name,
+                             Country.country == self.entered_rep_country
+                            )))
         result = session.execute(query)
         check_surfer = result.scalar()
 
-        # Does the entered_country exist in the entered_continent
         if check_surfer is not None:
             print(f"{self.entered_first_name} {self.entered_last_name} of {self.entered_rep_country} has already been added.")
             return
@@ -398,19 +464,28 @@ class AddSurfer:
         query = (select(Country.country_id)
                  .where(Country.country == self.entered_rep_country))
         result = session.execute(query)
-        entered_country_id = result.scalar()
+        entered_rep_country_id = result.scalar()
 
         # Get city_id from the city table
-        query = (select(City.city_id)
-                 .where(City.city == self.entered_home_city))
-        result = session.execute(query)
-        entered_city_id = result.scalar()
+        if self.entered_home_city is None:
+            entered_city_id = None
+        else:
+            query = (select(City.city_id)
+                     .join(Region, Region.region_id == City.region_id)
+                     .join(Country, Country.country_id == Region.country_id)
+                     .where(and_(
+                                 City.city == self.entered_home_city,
+                                 Region.region == self.entered_home_region,
+                                 Country.country == self.entered_home_country
+                                )))
+            result = session.execute(query)
+            entered_city_id = result.scalar()
 
         new_surfer = Surfers(gender=self.entered_gender,
                              first_name=self.entered_first_name,
                              last_name=self.entered_last_name,
                              stance=self.entered_stance,
-                             rep_country_id=entered_country_id,
+                             rep_country_id=entered_rep_country_id,
                              birthday=self.entered_birthday,
                              height=self.entered_height,
                              weight=self.entered_weight,
@@ -425,29 +500,31 @@ class AddSurfer:
 ########################################################################################################################
 # 5.0 - Testing
 
+
 # # Enter a New Country
-# inst = AddLocation(entered_continent='Oceania', entered_country="Australia")
+# inst = AddLocation(entered_continent='North America', entered_country="Australia")
 # inst.add_new_country()
+
 
 # # Enter a New Region
 # inst = AddLocation(entered_continent='North America',
-#                   entered_country='Hawaii',
-#                   entered_region='Oahu')
+#                    entered_country='Australia',
+#                    entered_region='North Carolina')
 #
 # inst.add_new_region()
 
 
 # # Enter a New City
 # inst = AddLocation(entered_continent='North America',
-#                   entered_country='Hawaii',
-#                   entered_region='Oahu',
-#                   entered_city='North Shore')
+#                    entered_country='USA',
+#                    entered_region='California',
+#                    entered_city='North Shore')
 #
 # inst.add_new_city()
 
 # # Enter a New Break
 # inst = AddLocation(entered_continent='North America',
-#                    entered_country='Hawaii',
+#                    entered_country='California',
 #                    entered_region='Oahu',
 #                    entered_break_name='Pipeline',
 #                    entered_break_type='Reef',
@@ -461,4 +538,17 @@ class AddSurfer:
 # inst.add_new_break()
 
 # Enter a New Surfer
-inst = AddSurfer()
+inst = AddSurfer(entered_gender='Male',
+                 entered_first_name='John John',
+                 entered_last_name='Florence',
+                 entered_stance='Regular',
+                 entered_rep_country='Hawaii',
+                 entered_birthday='1992-10-18',
+                 entered_height=168,
+                 entered_weight=79,
+                 entered_first_season=2008,
+                 entered_first_tour='Qualifying Series',
+                 entered_home_country='Hawaii',
+                 entered_home_region='Oahu',
+                 entered_home_city='North Shore')
+inst.add_new_surfer()

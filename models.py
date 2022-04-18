@@ -668,11 +668,15 @@ class AddSurfer:
 
 class AddTour:
     def __init__(self,
-                 entered_year: int,
-                 entered_gender: str,
-                 entered_tour_type: str,
+                 entered_year: Optional[int] = None,
+                 entered_gender: Optional[str] = None,
+                 entered_tour_type: Optional[str] = None,
+                 entered_tour_name: Optional[str] = None,
                  entered_event_name: Optional[str] = None,
                  entered_stop_nbr: Optional[int] = None,
+                 entered_country: Optional[str] = None,
+                 entered_region: Optional[str] = None,
+                 entered_break_name: Optional[str] = None,
                  entered_open_date: Optional = None,
                  entered_close_date: Optional = None,
                  entered_round: Optional[str] = None,
@@ -701,11 +705,15 @@ class AddTour:
                  entered_wave_14: Optional[float] = None,
                  entered_wave_15: Optional[float] = None):
 
-        self.entered_year: int = entered_year
-        self.entered_gender: str = entered_gender
-        self.entered_tour_type: str = entered_tour_type
+        self.entered_year: Optional[int] = entered_year
+        self.entered_gender: Optional[str] = entered_gender
+        self.entered_tour_type: Optional[str] = entered_tour_type
+        self.entered_tour_name: Optional[str] = entered_tour_name
         self.entered_event_name: Optional[str] = entered_event_name
         self.entered_stop_nbr: Optional[int] = entered_stop_nbr
+        self.entered_country: Optional[str] = entered_country
+        self.entered_region: Optional[str] = entered_region
+        self.entered_break_name: Optional[str] = entered_break_name
         self.entered_open_date: Optional = entered_open_date
         self.entered_close_date: Optional = entered_close_date
         self.entered_round: Optional[str] = entered_round
@@ -775,7 +783,82 @@ class AddTour:
         session.commit()
 
     def add_new_event(self):
-        pass
+        session = Session()
+
+        # Check that the tour name has been entered
+        if self.entered_tour_name is None or self.entered_tour_name == '':
+            print(f"Which tour are you trying to add an event to?")
+            return
+
+        # Check that the event name has been added
+        if self.entered_event_name is None or self.entered_event_name == '':
+            print(f"What is the name of the event you are adding?")
+            return
+
+        # Check that the stop number has been added
+        if self.entered_stop_nbr is None:
+            print(f"What stop number is this event? You entered: {self.entered_stop_nbr}")
+            return
+
+        # Check that the Country, Region, and Break were added
+        if self.entered_country is None or self.entered_country == '':
+            print(f"What country was this even in?")
+            return
+
+        if self.entered_region is None or self.entered_region == '':
+            print(f"What region of {self.entered_country} was this event in?")
+            return
+
+        if self.entered_break_name is None or self.entered_break_name == '':
+            print(f"What is the name of the break?")
+            return
+
+        # Check to see if the entered_event exists in the entered_tour
+        query = (select(Event.event_name)
+                 .join(Tour, Tour.tour_id == Tour.tour_id)
+                 .where(
+                 and_(
+                      Tour.tour_name == self.entered_tour_name,
+                      Event.stop_nbr == self.entered_stop_nbr
+                      )))
+
+        result = session.execute(query)
+        check_event = result.scalar()
+
+        # Does the entered_event exist in the entered_tour
+        if check_event is not None:
+            print(f"The event {self.entered_event_name} "
+                  f"in the {self.entered_tour_name} has already been added.")
+            return
+
+        # Get tour_id from tour table
+        query = (select(Tour.tour_id)
+                 .where(Tour.tour_name == self.entered_tour_name))
+        result = session.execute(query)
+        entered_tour_id = result.scalar()
+
+        # Get break_id from break table
+        query = (select(Break.break_id)
+                 .join(Region, Break.region_id == Region.region_id)
+                 .join(Country, Region.country_id == Country.country_id)
+                 .where(and_(
+                             Break.break_name == self.entered_break_name,
+                             Region.region == self.entered_region,
+                             Country.country == self.entered_country
+                            )))
+        result = session.execute(query)
+        entered_break_id = result.scalar()
+
+        new_event = Event(event_name=self.entered_event_name,
+                          tour_id=entered_tour_id,
+                          stop_nbr=self.entered_stop_nbr,
+                          break_id=entered_break_id,
+                          open_date=self.entered_open_date,
+                          close_date=self.entered_close_date)
+
+        session.add(new_event)
+        session.flush()
+        session.commit()
 
     def add_new_round(self):
         pass
@@ -845,8 +928,19 @@ class AddTour:
 #                  entered_home_city='North Shore')
 # inst.add_new_surfer()
 
-# Enter a New Tour
-inst = AddTour(entered_year=2022,
-               entered_gender='Men',
-               entered_tour_type='Championship Tour')
-inst.add_new_tour()
+# # Enter a New Tour
+# inst = AddTour(entered_year=2022,
+#                entered_gender='Men',
+#                entered_tour_type='Championship Tour')
+# inst.add_new_tour()
+
+# # Enter a New Event
+# inst = AddTour(entered_tour_name='2022 Mens Championship Tour',
+#                entered_event_name='Billabong Prop Pipeline',
+#                entered_stop_nbr=1,
+#                entered_country='Hawaii',
+#                entered_region='Oahu',
+#                entered_break_name='Pipeline',
+#                entered_open_date='2022-01-29',
+#                entered_close_date='2022-02-10')
+# inst.add_new_event()

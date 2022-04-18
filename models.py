@@ -665,13 +665,12 @@ class AddSurfer:
         session.flush()
         session.commit()
 
-        
+
 class AddTour:
     def __init__(self,
                  entered_year: int,
                  entered_gender: str,
                  entered_tour_type: str,
-                 entered_tour_name: str,
                  entered_event_name: Optional[str] = None,
                  entered_stop_nbr: Optional[int] = None,
                  entered_open_date: Optional = None,
@@ -705,7 +704,6 @@ class AddTour:
         self.entered_year: int = entered_year
         self.entered_gender: str = entered_gender
         self.entered_tour_type: str = entered_tour_type
-        self.entered_tour_name: str = entered_tour_name
         self.entered_event_name: Optional[str] = entered_event_name
         self.entered_stop_nbr: Optional[int] = entered_stop_nbr
         self.entered_open_date: Optional = entered_open_date
@@ -736,6 +734,60 @@ class AddTour:
         self.entered_wave_14: Optional[float] = entered_wave_14
         self.entered_wave_15: Optional[float] = entered_wave_15
 
+    def add_new_tour(self):
+        session = Session()
+
+        # Check that the tour type has been entered
+        if self.entered_tour_type is None or self.entered_tour_type == '':
+            print(f"What type of tour is being added?")
+            return
+
+        # Check that a year has been entered
+        if self.entered_year is None or self.entered_year == '':
+            print(f"What year did this tour take place?")
+            return
+
+        # Check to see if the tour already exists
+        query = (select(Tour.tour_id)
+                 .where(and_(
+                             Tour.year == self.entered_year,
+                             Tour.gender == self.entered_gender,
+                             Tour.tour_type == self.entered_tour_type
+                            )))
+
+        result = session.execute(query)
+        check_tour = result.scalar()
+
+        # Does the entered_country exist in the entered_continent
+        if check_tour is not None:
+            print(f"The {self.entered_year} {self.entered_gender}s {self.entered_tour_type} has already been added.")
+            return
+
+        entered_tour_name = f"{self.entered_year} {self.entered_gender}s {self.entered_tour_type}"
+
+        new_tour = Tour(year=self.entered_year,
+                        gender=self.entered_gender,
+                        tour_type=self.entered_tour_type,
+                        tour_name=entered_tour_name)
+
+        session.add(new_tour)
+        session.flush()
+        session.commit()
+
+    def add_new_event(self):
+        pass
+
+    def add_new_round(self):
+        pass
+
+    def add_new_heat_details(self):
+        pass
+
+    def add_new_surfers_to_heat(self):
+        pass
+
+    def add_new_heat_results(self):
+        pass
 
 ########################################################################################################################
 # 5.0 - Testing
@@ -792,3 +844,9 @@ class AddTour:
 #                  entered_home_region='Oahu',
 #                  entered_home_city='North Shore')
 # inst.add_new_surfer()
+
+# Enter a New Tour
+inst = AddTour(entered_year=2022,
+               entered_gender='Men',
+               entered_tour_type='Championship Tour')
+inst.add_new_tour()

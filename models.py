@@ -7,7 +7,7 @@ from typing import Optional
 
 from sqlalchemy import Column, Integer, String, Date, Float, and_
 from sqlalchemy import create_engine, select, ForeignKey
-from sqlalchemy.orm import relationship, sessionmaker, join
+from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
 ########################################################################################################################
@@ -93,6 +93,7 @@ class Break(Base):
     clean = Column(Float)
     blown_out = Column(Float)
     too_small = Column(Float)
+    events = relationship("Event")
 
     def __repr__(self):
         return f"Break(break_id={self.break_id!r}, " \
@@ -105,6 +106,7 @@ class Break(Base):
                f"clean={self.clean!r}, " \
                f"blown_out={self.blown_out!r}, " \
                f"too_small={self.too_small!r}, " \
+
 
 
 class Surfers(Base):
@@ -121,6 +123,7 @@ class Surfers(Base):
     first_season = Column(Integer)
     first_tour = Column(String(length=50))
     home_city_id = Column(Integer, ForeignKey('city.city_id'), nullable=False)
+    heat_surfers = relationship("HeatSurfers")
 
     def __repr__(self):
         return f"surfer_id={self.surfer_id!r}, " \
@@ -144,6 +147,7 @@ class Tour(Base):
     gender = Column(String(length=6))
     tour_type = Column(String(length=50), nullable=False)
     tour_name = Column(String(length=50), nullable=False)
+    events = relationship("Event")
 
     def __repr__(self):
         return f"tour_id={self.tour_id!r}, " \
@@ -152,7 +156,130 @@ class Tour(Base):
                f"tour_type={self.tour_type!r}, " \
                f"tour_name={self.tour_name!r}"
 
+
+class Event(Base):
+    __tablename__ = 'event'
+    event_id = Column(Integer, primary_key=True)
+    event_name = Column(String(length=50), nullable=False)
+    tour_id = Column(Integer, ForeignKey('tour.tour_id'), nullable=False)
+    stop_nbr = Column(Integer)
+    break_id = Column(Integer, ForeignKey('break.break_id'), nullable=False)
+    open_date = Column(Date)
+    close_date = Column(Date)
+    heat_details = relationship("HeatDetails")
+
+    def __repr__(self):
+        return f"event_id={self.event_id!r}, " \
+               f"event_name={self.event_name!r}, " \
+               f"tour_id={self.tour_id!r}, " \
+               f"stop_nbr={self.stop_nbr!r}, " \
+               f"break_id={self.break_id!r}, " \
+               f"open_date={self.open_date!r}, " \
+               f"close_date={self.close_date!r}"
+
+
+class Round(Base):
+    __tablename__ = 'round'
+    round_id = Column(Integer, primary_key=True)
+    round = Column(String(length=32), nullable=False)
+    heat_details = relationship("HeatDetails")
+
+    def __repr__(self):
+        return f"round_id={self.round_id!r}, " \
+               f"round={self.even!r}"
+
+
+class HeatDetails(Base):
+    __tablename__ = 'heat_details'
+    heat_id = Column(Integer, primary_key=True)
+    heat_nbr = Column(String(length=10), nullable=False)
+    event_id = Column(Integer, ForeignKey('event.event_id'), nullable=False)
+    round_id = Column(Integer, ForeignKey('round.round_id'), nullable=False)
+    wind = Column(String(length=32))
+    heat_date = Column(Date)
+    duration = Column(Integer)
+    wave_min = Column(Integer)
+    wave_max = Column(Integer)
+    heat_surfers = relationship("HeatSurfers")
+    heat_results = relationship("HeatResults")
+
+    def repr__(self):
+        return f"heat_id={self.heat_id!r}, " \
+               f"heat_nbr={self.heat_nbr}, " \
+               f"event_id={self.event_id!r}, " \
+               f"round_id={self.round_id!r}, " \
+               f"wind={self.wind!r}, " \
+               f"heat_date={self.heat_date!r}, " \
+               f"duration={self.duration!r}, " \
+               f"wave_min={self.wave_min!r}, " \
+               f"wave_max={self.wave_max!r}"
+
+
+class HeatSurfers(Base):
+    __tablename__ = 'heat_surfers'
+    surfer_heat_id = Column(Integer, primary_key=True)
+    heat_id = Column(Integer, ForeignKey('heat_details.heat_id'), nullable=False)
+    surfer_id = Column(Integer, ForeignKey('surfers.surfer_id'), nullable=False)
+    surfer_results = relationship("HeatResults")
+
+    def __repr__(self):
+        return f"surfer_heat_id={self.surfer_heat_id!r}, " \
+               f"heat_id={self.heat_id!r}, " \
+               f"surfer_id={self.surfer_id!r}"
+
+
+class HeatResults(Base):
+    __tablename__ = 'heat_results'
+    heat_result_id = Column(Integer, primary_key=True)
+    heat_id = Column(Integer, ForeignKey('heat_details.heat_id'), nullable=False)
+    surfer_in_heat_id = Column(Integer, ForeignKey('heat_surfers.surfer_heat_id'), nullable=False)
+    pick_to_win_percent = Column(Float)
+    jersey_color = Column(String(length=32))
+    status = Column(String(length=12))
+    wave_1 = Column(Float)
+    wave_2 = Column(Float)
+    wave_3 = Column(Float)
+    wave_4 = Column(Float)
+    wave_5 = Column(Float)
+    wave_6 = Column(Float)
+    wave_7 = Column(Float)
+    wave_8 = Column(Float)
+    wave_9 = Column(Float)
+    wave_10 = Column(Float)
+    wave_11 = Column(Float)
+    wave_12 = Column(Float)
+    wave_13 = Column(Float)
+    wave_14 = Column(Float)
+    wave_15 = Column(Float)
+
+    def __repr__(self):
+        return f"heat_result_id={self.heat_result_id!r}, " \
+               f"heat_id={self.heat_id!r}, " \
+               f"surfer_in_heat_id={self.surfer_in_heat_id!r}, " \
+               f"pick_to_win_percent={self.pick_to_win_percent!r}, " \
+               f"jersey_color={self.jersey_color!r}, " \
+               f"status={self.status!r}, " \
+               f"wave_1={self.wave_1!r}, " \
+               f"wave_2={self.wave_2!r}, " \
+               f"wave_3={self.wave_3!r}, " \
+               f"wave_4={self.wave_4!r}, " \
+               f"wave_5={self.wave_5!r}, " \
+               f"wave_6={self.wave_6!r}, " \
+               f"wave_7={self.wave_7!r}, " \
+               f"wave_8={self.wave_8!r}, " \
+               f"wave_9={self.wave_9!r}, " \
+               f"wave_10={self.wave_10!r}, " \
+               f"wave_11={self.wave_11!r}, " \
+               f"wave_12={self.wave_12!r}, " \
+               f"wave_13={self.wave_13!r}, " \
+               f"wave_14={self.wave_14!r}, " \
+               f"wave_15={self.wave_15!r}"
+
+
 ########################################################################################################################
+
+
+#######################################################################################################################
 # 4.0 - Table Manipulation
 
 
@@ -497,7 +624,8 @@ class AddSurfer:
         check_surfer = result.scalar()
 
         if check_surfer is not None:
-            print(f"{self.entered_first_name} {self.entered_last_name} of {self.entered_rep_country} has already been added.")
+            print(f"{self.entered_first_name} {self.entered_last_name} "
+                  f"of {self.entered_rep_country} has already been added.")
             return
 
         # Get country_id from the country table
@@ -536,6 +664,78 @@ class AddSurfer:
         session.add(new_surfer)
         session.flush()
         session.commit()
+
+        
+class AddTour:
+    def __init__(self,
+                 entered_year: int,
+                 entered_gender: str,
+                 entered_tour_type: str,
+                 entered_tour_name: str,
+                 entered_event_name: Optional[str] = None,
+                 entered_stop_nbr: Optional[int] = None,
+                 entered_open_date: Optional = None,
+                 entered_close_date: Optional = None,
+                 entered_round: Optional[str] = None,
+                 entered_heat_nbr: Optional[str] = None,
+                 entered_wind: Optional[str] = None,
+                 entered_heat_date: Optional = None,
+                 entered_duration: Optional[int] = None,
+                 entered_wave_min: Optional[int] = None,
+                 entered_wave_max: Optional[int] = None,
+                 entered_pick_to_win_percent: Optional[float] = None,
+                 entered_jersey_color: Optional[str] = None,
+                 entered_status: Optional[str] = None,
+                 entered_wave_1: Optional[float] = None,
+                 entered_wave_2: Optional[float] = None,
+                 entered_wave_3: Optional[float] = None,
+                 entered_wave_4: Optional[float] = None,
+                 entered_wave_5: Optional[float] = None,
+                 entered_wave_6: Optional[float] = None,
+                 entered_wave_7: Optional[float] = None,
+                 entered_wave_8: Optional[float] = None,
+                 entered_wave_9: Optional[float] = None,
+                 entered_wave_10: Optional[float] = None,
+                 entered_wave_11: Optional[float] = None,
+                 entered_wave_12: Optional[float] = None,
+                 entered_wave_13: Optional[float] = None,
+                 entered_wave_14: Optional[float] = None,
+                 entered_wave_15: Optional[float] = None):
+
+        self.entered_year: int = entered_year
+        self.entered_gender: str = entered_gender
+        self.entered_tour_type: str = entered_tour_type
+        self.entered_tour_name: str = entered_tour_name
+        self.entered_event_name: Optional[str] = entered_event_name
+        self.entered_stop_nbr: Optional[int] = entered_stop_nbr
+        self.entered_open_date: Optional = entered_open_date
+        self.entered_close_date: Optional = entered_close_date
+        self.entered_round: Optional[str] = entered_round
+        self.entered_heat_nbr: Optional[str] = entered_heat_nbr
+        self.entered_wind: Optional[str] = entered_wind
+        self.entered_heat_date: Optional = entered_heat_date
+        self.entered_duration: Optional[int] = entered_duration
+        self.entered_wave_min: Optional[int] = entered_wave_min
+        self.entered_wave_max: Optional[int] = entered_wave_max
+        self.entered_pick_to_win_percent: Optional[float] = entered_pick_to_win_percent
+        self.entered_jersey_color: Optional[str] = entered_jersey_color
+        self.entered_status: Optional[str] = entered_status
+        self.entered_wave_1: Optional[float] = entered_wave_1
+        self.entered_wave_2: Optional[float] = entered_wave_2
+        self.entered_wave_3: Optional[float] = entered_wave_3
+        self.entered_wave_4: Optional[float] = entered_wave_4
+        self.entered_wave_5: Optional[float] = entered_wave_5
+        self.entered_wave_6: Optional[float] = entered_wave_6
+        self.entered_wave_7: Optional[float] = entered_wave_7
+        self.entered_wave_8: Optional[float] = entered_wave_8
+        self.entered_wave_9: Optional[float] = entered_wave_9
+        self.entered_wave_10: Optional[float] = entered_wave_10
+        self.entered_wave_11: Optional[float] = entered_wave_11
+        self.entered_wave_12: Optional[float] = entered_wave_12
+        self.entered_wave_13: Optional[float] = entered_wave_13
+        self.entered_wave_14: Optional[float] = entered_wave_14
+        self.entered_wave_15: Optional[float] = entered_wave_15
+
 
 ########################################################################################################################
 # 5.0 - Testing

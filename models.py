@@ -279,7 +279,6 @@ class HeatResults(Base):
 #######################################################################################################################
 # 4.0 - Table Manipulation
 
-
 class AddLocation:
     def __init__(self,
                  entered_continent: str,
@@ -308,30 +307,108 @@ class AddLocation:
         self.entered_blown_out: Optional[float] = entered_blown_out
         self.entered_too_small: Optional[float] = entered_too_small
 
+    def was_continent_entered(self):
+        if self.entered_continent is None or self.entered_continent == '':
+            print(f"You seem a little lost. What continent are you on?")
+            return
+
+    def was_country_entered(self):
+        session = Session()
+
+        # Check to see if a country was entered
+        # If a country was entered does it already exist on the entered continent?
+        if self.entered_continent is None or self.entered_continent == '':
+            print(f"You seem a little lost. You're on the continent of {self.entered_continent}.")
+            print(f"What country are you in?")
+            return
+        else:
+            query = (select(Country.country_id)
+                     .join(Continent, Continent.continent_id == Country.continent_id)
+                     .where(and_(
+                                  Continent.continent == self.entered_continent,
+                                  Country.country == self.entered_country
+                                )))
+            result = session.execute(query)
+            check_country = result.scalar()
+
+            # Did the query return a country? If so it has already been added to wsl.country
+            if check_country is not None:
+                print(f"The country, {self.entered_country} "
+                      f"has already been discovered on the continent, {self.entered_continent}.")
+                return
+
+    def was_region_entered(self):
+        session = Session()
+
+        # Check to see if a region was entered
+        # If a region was entered does it already exist in the entered country and continent?
+        if self.entered_region is None or self.entered_region == '':
+            print(f"You seem a little lost. ")
+            print(f"You are in the country, {self.entered_country} on the continent of {self.entered_continent}.")
+            print(f"What region are you in? You entered: {self.entered_region}.")
+            return
+        else:
+            # Does the entered region exist in the entered country on the entered continent?
+            query = (select(Region.region_id)
+                     .join(Country, Country.country_id == Region.country_id)
+                     .join(Continent, Continent.continent_id == Country.continent_id)
+                     .where(and_(
+                                  Continent.continent == self.entered_continent,
+                                  Country.country == self.entered_country,
+                                  Region.region == self.entered_region
+                                )))
+
+            result = session.execute(query)
+            check_region = result.scalar()
+
+            # Did the query return a region? If so it has already been added to wsl.region.
+            if check_region is not None:
+                print(f"The region, {self.entered_region} in the country, {self.entered_country} "
+                      f"on the continent, {self.entered_country} has already been discovered.")
+                return
+
+    def was_city_entered(self):
+        session = Session()
+
+        # Check to see if a city was entered
+        # If a city was entered does it already exist in wsl.city for the entered region, country, and continent?
+        if self.entered_city is None or self.entered_city == '':
+            print(f"You seem a little lost. ")
+            print(f"You are in {self.entered_region}, {self.entered_country} "
+                  f"on the continent of {self.entered_continent}.")
+            print(f"What city are you in? You entered: {self.entered_city}.")
+            return
+        else:
+            # Does the entered city exist in the entered region, country, and continent?
+            query = (select(City.city_id)
+                     .join(Region, Region.region_id == City.region_id)
+                     .join(Country, Country.country_id == Region.country_id)
+                     .join(Continent, Continent.continent_id == Country.continent_id)
+                     .where(and_(
+                                  Continent.continent == self.entered_continent,
+                                  Country.country == self.entered_country,
+                                  Region.region == self.entered_region,
+                                  City.city == self.entered_city
+                                )))
+
+            result = session.execute(query)
+            check_city = result.scalar()
+
+            # Did the query return a city? If so it has already been added to wsl.city
+            if check_city is not None:
+                print(f"{self.entered_city}, {self.entered_region}, {self.entered_country} "
+                      f"on the continent of {self.entered_continent} has already been discovered.")
+            return
+
+
     def add_new_country(self):
         session = Session()
 
-        # Check that country is entered
-        if self.entered_country is None or self.entered_country == '':
-            print(f"What country are you adding?")
-            return
+        # Was a continent entered?
+        self.was_continent_entered()
 
-        # Check that continent is entered
-        if self.entered_continent is None or self.entered_continent == '':
-            print(f"What continent is {self.entered_country} on?")
-            return
-
-        # Check to see if the entered_country exists
-        query = (select(Country.country)
-                 .where(Country.country == self.entered_country)
-                 )
-        result = session.execute(query)
-        check_country = result.scalar()
-
-        # Does the entered_country exist in the entered_continent
-        if check_country is not None:
-            print(f"The country of {self.entered_country} has already been discovered.")
-            return
+        # Was a country entered?
+        self.was_country_entered()
 
         # Get continent_id from continent table
         query = (select(Continent.continent_id)
@@ -339,8 +416,11 @@ class AddLocation:
         result = session.execute(query)
         entered_continent_id = result.scalar()
 
-        new_country = Country(continent_id=entered_continent_id, country=self.entered_country)
+        # Create an instance of the Country class to add to wsl.country
+        new_country = Country(continent_id=entered_continent_id,
+                              country=self.entered_country)
 
+        # Add the new country.
         session.add(new_country)
         session.flush()
         session.commit()
@@ -348,103 +428,51 @@ class AddLocation:
     def add_new_region(self):
         session = Session()
 
-        # Check that country is entered
-        if self.entered_country is None or self.entered_country == '':
-            print(f"What country are you adding?")
-            return
+        # Was a continent entered?
+        self.was_continent_entered()
 
-        # Check that continent is entered
-        if self.entered_continent is None or self.entered_continent == '':
-            print(f"What continent is {self.entered_country} on?")
-            return
+        # Was a country entered?
+        self.was_country_entered()
 
-        # Since entered_region is not required check to see if it has been entered
-        if self.entered_region is None or self.entered_region == '':
-            print(f"You didn't enter a region.")
-            return
-
+        # If a valid country was entered and does not already exist add it to wsl.country
         self.add_new_country()
 
-        # Check to see if the entered_region exists
-        query = (select(Region.region_id)
-                 .join(Country, Region.country_id == Country.country_id)
-                 .where(
-                    and_(
-                        Region.region == self.entered_region,
-                        Country.country == self.entered_country
-                        )))
-
-        result = session.execute(query)
-        check_region = result.scalar()
-
-        # Does the entered_region exist in the entered_continent
-        if check_region is not None:
-            print(f"The region of {self.entered_region} "
-                  f"in the country of {self.entered_country} has already been discovered.")
-            return
+        # Was a region entered?
+        self.was_region_entered()
 
         # Get country_id from continent table
+        # We need to run this query again incase a new country was added when checking the entered country
         query = (select(Country.country_id)
-                 .where(Country.country == self.entered_country))
+                 .join(Continent, Continent.continent_id == Country.continent_id)
+                 .where(and_(
+                              Continent.continent == self.entered_continent,
+                              Country.country == self.entered_country
+                            )))
+
         result = session.execute(query)
-        entered_country_id = result.scalar()
+        entered_country_id = result.scalar()\
 
-        new_region = Region(country_id=entered_country_id, region=self.entered_region)
+        # Create an instance of the Region class to add the new region to wsl.region.
+        new_region = Region(country_id=entered_country_id,
+                            region=self.entered_region)
 
+        # Add the new region
         session.add(new_region)
         session.flush()
         session.commit()
 
     def add_new_city(self):
         session = Session()
-
-        # Check that country is entered
-        if self.entered_country is None or self.entered_country == '':
-            print(f"What country are you adding?")
-            return
-
-        # Check that continent is entered
-        if self.entered_continent is None or self.entered_continent == '':
-            print(f"What continent is {self.entered_country} on?")
-            return
-
-        # Since entered_region is not required check to see if it has been entered
-        if self.entered_region is None or self.entered_region == '':
-            print('')
-            print(f"You didn't enter a region.")
-            print('')
-            return
-
-        # Since entered_city is not required check to see if it has been entered
-        if self.entered_city is None or self.entered_city == '':
-            print('')
-            print(f"You didn't enter a city.")
-            print('')
-            return
-
-        # Add Country and Region if necessary
-        self.add_new_region()
-
-        # Check to see if the entered_city exists
-        query = (select(City.city)
-                 .join(Region, City.region_id == Region.region_id)
-                 .join(Country, Region.country_id == Country.country_id)
-                 .where(and_(
-                            City.city == self.entered_city,
-                            Region.region == self.entered_region,
-                            Country.country == self.entered_country
-                 )))
-
-        result = session.execute(query)
-        check_city = result.scalar()
-
-        # Does the entered_region exist in the entered_continent
-        if check_city is not None:
-            print('')
-            print(f"The city of {self.entered_city} "
-                  f"in {self.entered_region}, {self.entered_country} has already been discovered.")
-            print('')
-            return
+        # Was a continent entered?
+        self.was_continent_entered()
+        # Was a country entered?
+        self.was_country_entered()
+        # If a valid country was entered and does not already exist add it to wsl.country
+        self.add_new_country()
+        # Was a region entered?
+        self.was_region_entered()
+        # Was a city entered?
+        self.was_city_entered()
 
         # Get region_id from continent table
         query = (select(Region.region_id)
@@ -858,16 +886,104 @@ class AddTour:
         session.commit()
 
     def add_new_round(self):
-        pass
+        session = Session()
+
+        # Check that text is entered for round
+        if self.entered_round is None or self.entered_round == '':
+            print(f"What is the name of the round you are creating?")
+            return
+
+        # Create an instance of the Round class to add to wsl.round
+        new_round = Round(round=self.entered_round)
+
+        session.add(new_round)
+        session.flush()
+        session.commit()
 
     def add_new_heat_details(self):
-        pass
+        session = Session()
+
+        # Check to see if tour name is entered
+        if self.entered_tour_name is None or self.entered_tour_name == '':
+            print(f"Which tour are you trying to add an event to?")
+            return
+
+
+        # Check to see if event name is entered
+        if self.entered_event_name is None or self.entered_event_name == '':
+            print(f"What is the name of the event you are adding?")
+            return
+        else:
+            # If it is entered see if it exists for the tour entered
+            query = (select(Event.event_name)
+                .join(Tour, Tour.tour_id == Tour.tour_id)
+                .where(
+                and_(
+                    Tour.tour_name == self.entered_tour_name,
+                    Event.stop_nbr == self.entered_stop_nbr
+                )))
+
+            result = session.execute(query)
+            check_event = result.scalar()
+
+            # Does the entered_event exist in the entered_tour
+            if check_event is not None:
+                print(f"The event {self.entered_event_name} "
+                      f"in the {self.entered_tour_name} has already been added.")
+                return
+
+
+        # Check to see if round is entered
+        # Get Round id
+
+
+        # Check to see if heat nbr is entered for tour, event, round above
+
 
     def add_new_surfers_to_heat(self):
-        pass
+        session = Session()
+
+        # Check to see if tour name is entered
+        if self.entered_tour_name is None or self.entered_tour_name == '':
+            print(f"Which tour are you trying to add an event to?")
+            return
+
+
+        # Check to see if event name is entered for tour entered
+
+
+        # Check to see if round is entered
+
+
+        # Check to see id heat nbr is ented for tour, event, and round
+        # Get Heat id
+
+
+        # Check if surfer first and last name is entered
+        # Get Surfer id
+
 
     def add_new_heat_results(self):
-        pass
+        session = Session()
+
+        # Check to see if tour is entered
+        if self.entered_tour_name is None or self.entered_tour_name == '':
+            print(f"Which tour are you trying to add an event to?")
+            return
+
+        # Check to see if event is entered for tour entered
+
+
+        # Check to see if round is entered
+
+
+        # Check to see that heat nbr is entered
+        # Get Heat id
+
+
+        # Check to see if surfer first and last name is entered
+        # Get surfer id
+
 
 ########################################################################################################################
 # 5.0 - Testing

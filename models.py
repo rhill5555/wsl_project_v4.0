@@ -338,40 +338,22 @@ class AddLocation:
         # Check to see if a country was entered
         if self.entered_country is None or self.entered_country == '':
             no_entry_error = (f"\n{self.word:{self.char}^{self.width}}\n"
-                              f"You seem a little lost. What country are you on?\n"
+                              f"You seem a little lost. What country are you in?\n"
                               f"Country cannot be None or an empty string.\n"
-                              f"Your Entered: {self.entered_country}\n")
+                              f"You Entered: {self.entered_country}\n")
             raise ValueError(no_entry_error)
 
     def was_region_entered(self):
         session = Session()
 
         # Check to see if a region was entered
-        # If a region was entered does it already exist in the entered country and continent?
         if self.entered_region is None or self.entered_region == '':
-            print(f"You seem a little lost. ")
-            print(f"You are in the country, {self.entered_country} on the continent of {self.entered_continent}.")
-            print(f"What region are you in? You entered: {self.entered_region}.")
-            return
-        else:
-            # Does the entered region exist in the entered country on the entered continent?
-            query = (select(Region.region_id)
-                     .join(Country, Country.country_id == Region.country_id)
-                     .join(Continent, Continent.continent_id == Country.continent_id)
-                     .where(and_(
-                                  Continent.continent == self.entered_continent,
-                                  Country.country == self.entered_country,
-                                  Region.region == self.entered_region
-                                )))
-
-            result = session.execute(query)
-            check_region = result.scalar()
-
-            # Did the query return a region? If so it has already been added to wsl.region.
-            if check_region is not None:
-                print(f"The region, {self.entered_region} in the country, {self.entered_country} "
-                      f"on the continent, {self.entered_country} has already been discovered.")
-                return
+            no_entry_error = (f"\n{self.word:{self.char}^{self.width}}\n"
+                              f"You seem a little lost. "
+                              f"\nI see that you're in the country of {self.entered_country}.\n"
+                              f"What region are you in?\n"
+                              f"You Entered: {self.entered_region}\n")
+            raise ValueError(no_entry_error)
 
     def was_city_entered(self):
         session = Session()
@@ -497,26 +479,45 @@ class AddLocation:
         # Was a region entered?
         self.was_region_entered()
 
-        # Get country_id from continent table
-        # We need to run this query again incase a new country was added when checking the entered country
-        query = (select(Country.country_id)
+        # Does the entered region exist in the entered country on the entered continent?
+        query = (select(Region.region_id)
+                 .join(Country, Country.country_id == Region.country_id)
                  .join(Continent, Continent.continent_id == Country.continent_id)
                  .where(and_(
                               Continent.continent == self.entered_continent,
-                              Country.country == self.entered_country
+                              Country.country == self.entered_country,
+                              Region.region == self.entered_region
                             )))
 
         result = session.execute(query)
-        entered_country_id = result.scalar()\
+        check_region = result.scalar()
 
-        # Create an instance of the Region class to add the new region to wsl.region.
-        new_region = Region(country_id=entered_country_id,
-                            region=self.entered_region)
+        # Did the query return a region? If so it has already been added to wsl.region.
+        if check_region is not None:
+            print(f"\nThe region, {self.entered_region} in the country, {self.entered_country} "
+                  f"on the continent, {self.entered_country} has already been discovered.\n")
+            return
+        else:
+            # Get country_id from continent table
+            # We need to run this query again incase a new country was added when checking the entered country
+            query = (select(Country.country_id)
+                     .join(Continent, Continent.continent_id == Country.continent_id)
+                     .where(and_(
+                                  Continent.continent == self.entered_continent,
+                                  Country.country == self.entered_country
+                                )))
 
-        # Add the new region
-        session.add(new_region)
-        session.flush()
-        session.commit()
+            result = session.execute(query)
+            entered_country_id = result.scalar()\
+
+            # Create an instance of the Region class to add the new region to wsl.region.
+            new_region = Region(country_id=entered_country_id,
+                                region=self.entered_region)
+
+            # Add the new region
+            session.add(new_region)
+            session.flush()
+            session.commit()
 
     def add_new_city(self):
         session = Session()
@@ -1026,18 +1027,18 @@ class AddTour:
 # 5.0 - Testing
 
 
-# Enter a New Country
-inst = AddLocation(entered_continent='South America',
-                   entered_country='Brazil')
-inst.add_new_country()
+# # Enter a New Country
+# inst = AddLocation(entered_continent='South America',
+#                    entered_country='Brazil')
+# inst.add_new_country()
 
 
-# # Enter a New Region
-# inst = AddLocation(entered_continent='North America',
-#                    entered_country='Australia',
-#                    entered_region='North Carolina')
-#
-# inst.add_new_region()
+# Enter a New Region
+inst = AddLocation(entered_continent='North America',
+                   entered_country='Hawaii',
+                   entered_region='Oahu')
+
+inst.add_new_region()
 
 
 # # Enter a New City

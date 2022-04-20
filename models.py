@@ -400,6 +400,39 @@ class AddLocation:
                       f"on the continent of {self.entered_continent} has already been discovered.")
             return
 
+    def was_break_name_entered(self):
+        session = Session()
+
+        # Check to see if a break name was entered
+        # If a break name was entered does it already exist in wsl.break for the entered region, country, and continent?
+        if self.entered_break_name is None or self.entered_break_name == '':
+            print(f"You seem a little lost. ")
+            print(f"You are in {self.entered_region}, {self.entered_country} "
+                  f"on the continent of {self.entered_continent}.")
+            print(f"What break are you at? You entered: {self.entered_break_name}.")
+            return
+        else:
+            # Does the entered break exist in the entered region, country, and continent?
+            query = (select(Break.break_id)
+                     .join(Region, Region.region_id == Break.region_id)
+                     .join(Country, Country.country_id == Region.country_id)
+                     .join(Continent, Continent.continent_id == Country.continent_id)
+                     .where(and_(
+                                 Continent.continent == self.entered_continent,
+                                 Country.country == self.entered_country,
+                                 Region.region == self.entered_region,
+                                 Break.break_name == self.entered_break_name
+                                )))
+
+            result = session.execute(query)
+            check_break = result.scalar()
+
+            # Did the query return a break? If so it has already been added to wsl.break
+            if check_break is not None:
+                print(f"The wave at {self.entered_break_name} in "
+                      f"{self.entered_region}, {self.entered_country} "
+                      f"on the continent of {self.entered_continent} has already been discovered.")
+            return
 
     def add_new_country(self):
         session = Session()
@@ -463,28 +496,39 @@ class AddLocation:
 
     def add_new_city(self):
         session = Session()
+
         # Was a continent entered?
         self.was_continent_entered()
+
         # Was a country entered?
         self.was_country_entered()
+
         # If a valid country was entered and does not already exist add it to wsl.country
         self.add_new_country()
+
         # Was a region entered?
         self.was_region_entered()
+
+        # If a valid region was entered and does not already exist add it to wsl.region
+        self.add_new_region()
+
         # Was a city entered?
         self.was_city_entered()
 
         # Get region_id from continent table
         query = (select(Region.region_id)
                  .join(Country, Country.country_id == Region.country_id)
+                 .join(Continent, Continent.continent_id == Country.continent_id)
                  .where(and_(
                              Region.region == self.entered_region,
-                             Country.country == self.entered_country
+                             Country.country == self.entered_country,
+                             Continent.continent == self.entered_continent
                              )))
         result = session.execute(query)
         entered_region_id = result.scalar()
 
-        new_city = City(region_id=entered_region_id, city=self.entered_city)
+        new_city = City(region_id=entered_region_id,
+                        city=self.entered_city)
 
         session.add(new_city)
         session.flush()
@@ -493,62 +537,33 @@ class AddLocation:
     def add_new_break(self):
         session = Session()
 
-        # Check that country is entered
-        if self.entered_country is None or self.entered_country == '':
-            print(f"What country are you adding?")
-            return
+        # Was a continent entered?
+        self.was_continent_entered()
 
-        # Check that continent is entered
-        if self.entered_continent is None or self.entered_continent == '':
-            print(f"What continent is {self.entered_country} on?")
-            return
+        # Was a country entered?
+        self.was_country_entered()
 
-        # Since entered_region is not required check to see if it has been entered
-        if self.entered_region is None or self.entered_region == '':
-            print('')
-            print(f"You didn't enter a region.")
-            print('')
-            return
+        # If a valid country was entered and does not already exist add it to wsl.country
+        self.add_new_country()
 
-        # Since entered_break is not required check to see if it has been entered
-        if self.entered_break_name is None or self.entered_break_name == '':
-            print('')
-            print(f"You didn't enter a break name.")
-            print('')
-            return
+        # Was a region entered?
+        self.was_region_entered()
 
-        # Add Country and Region if necessary
+        # If a valid region was entered and does not already exist add it to wsl.region
         self.add_new_region()
 
-        # Check to see if the entered_break exists
-        query = (select(Break.break_name)
-                 .join(Region, Region.region_id == Break.region_id)
-                 .join(Country, Country.country_id == Region.country_id)
-                 .where(and_(
-                             Break.break_name == self.entered_break_name,
-                             Region.region == self.entered_region,
-                             Country.country == self.entered_country
-                            )))
-
-        result = session.execute(query)
-        check_break_name = result.scalar()
-
-        # Does the entered_region exist in the entered_continent
-        if check_break_name is not None:
-            print('')
-            print(f"The wave at {self.entered_break_name} "
-                  f"in {self.entered_region}, {self.entered_country} has already been discovered.")
-            print('')
-            return
+        # Was a city entered?
+        self.was_break_name_entered()
 
         # Get region_id from continent table
         query = (select(Region.region_id)
                  .join(Country, Country.country_id == Region.country_id)
+                 .join(Continent, Continent.continent_id == Country.continent_id)
                  .where(and_(
-                             Region.region == self.entered_region,
-                             Country.country == self.entered_country
-                            )))
-
+                  Region.region == self.entered_region,
+                  Country.country == self.entered_country,
+                  Continent.continent == self.entered_continent
+                 )))
         result = session.execute(query)
         entered_region_id = result.scalar()
 

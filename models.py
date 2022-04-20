@@ -330,32 +330,18 @@ class AddLocation:
                               f"You seem a little lost. What continent are you on?\n" 
                               f"Continent cannot be None or an empty string.\n"
                               f"Your Entered: {self.entered_continent}")
-        raise ValueError(no_entry_error)
+            raise ValueError(no_entry_error)
 
     def was_country_entered(self):
         session = Session()
 
         # Check to see if a country was entered
-        # If a country was entered does it already exist on the entered continent?
-        if self.entered_continent is None or self.entered_continent == '':
-            print(f"You seem a little lost. You're on the continent of {self.entered_continent}.")
-            print(f"What country are you in?")
-            return
-        else:
-            query = (select(Country.country_id)
-                     .join(Continent, Continent.continent_id == Country.continent_id)
-                     .where(and_(
-                                  Continent.continent == self.entered_continent,
-                                  Country.country == self.entered_country
-                                )))
-            result = session.execute(query)
-            check_country = result.scalar()
-
-            # Did the query return a country? If so it has already been added to wsl.country
-            if check_country is not None:
-                print(f"The country, {self.entered_country} "
-                      f"has already been discovered on the continent, {self.entered_continent}.")
-                return
+        if self.entered_country is None or self.entered_country == '':
+            no_entry_error = (f"\n{self.word:{self.char}^{self.width}}\n"
+                              f"You seem a little lost. What country are you on?\n"
+                              f"Country cannot be None or an empty string.\n"
+                              f"Your Entered: {self.entered_country}\n")
+            raise ValueError(no_entry_error)
 
     def was_region_entered(self):
         session = Session()
@@ -463,20 +449,38 @@ class AddLocation:
         # Was a country entered?
         self.was_country_entered()
 
-        # Get continent_id from continent table
-        query = (select(Continent.continent_id)
-                 .where(Continent.continent == self.entered_continent))
+        # If a country was entered does it already exist on the entered continent?
+        query = (select(Country.country_id)
+                 .join(Continent, Continent.continent_id == Country.continent_id)
+                 .where(and_(
+                             Continent.continent == self.entered_continent,
+                             Country.country == self.entered_country
+                             )))
         result = session.execute(query)
-        entered_continent_id = result.scalar()
+        check_country = result.scalar()
 
-        # Create an instance of the Country class to add to wsl.country
-        new_country = Country(continent_id=entered_continent_id,
-                              country=self.entered_country)
+        # Did the query return a country? If so it has already been added to wsl.country
+        if check_country is not None:
+            print(f"\nThe country, {self.entered_country} "
+                  f"has already been discovered on {self.entered_continent}.\n")
+            return check_country
+        else:
+            # Add New Country to wsl.country
 
-        # Add the new country.
-        session.add(new_country)
-        session.flush()
-        session.commit()
+            # Get continent_id from continent table
+            query = (select(Continent.continent_id)
+                     .where(Continent.continent == self.entered_continent))
+            result = session.execute(query)
+            entered_continent_id = result.scalar()
+
+            # Create an instance of the Country class to add to wsl.country
+            new_country = Country(continent_id=entered_continent_id,
+                                  country=self.entered_country)
+
+            # Add the new country.
+            session.add(new_country)
+            session.flush()
+            session.commit()
 
     def add_new_region(self):
         session = Session()
@@ -602,429 +606,429 @@ class AddLocation:
         session.commit()
 
 
-# class AddSurfer:
-#     def __init__(self,
-#                  entered_gender: str = None,
-#                  entered_first_name: str = None,
-#                  entered_last_name: str = None,
-#                  entered_stance: Optional[str] = None,
-#                  entered_rep_country: str = None,
-#                  entered_birthday: Optional = None,
-#                  entered_height: Optional[int] = None,
-#                  entered_weight: Optional[int] = None,
-#                  entered_first_season: Optional[int] = None,
-#                  entered_first_tour: Optional[str] = None,
-#                  entered_home_country: Optional[str] = None,
-#                  entered_home_region: Optional[str] = None,
-#                  entered_home_city: Optional[str] = None
-#                  ):
-#
-#         self.entered_gender: str = entered_gender
-#         self.entered_first_name: str = entered_first_name
-#         self.entered_last_name: str = entered_last_name
-#         self.entered_stance: Optional[str] = entered_stance
-#         self.entered_rep_country: str = entered_rep_country
-#         self.entered_birthday: Optional = entered_birthday
-#         self.entered_height: Optional[int] = entered_height
-#         self.entered_weight: Optional[int] = entered_weight
-#         self.entered_first_season: Optional[int] = entered_first_season
-#         self.entered_first_tour: Optional[str] = entered_first_tour
-#         self.entered_home_country: Optional[str] = entered_home_country
-#         self.entered_home_region: Optional[str] = entered_home_region
-#         self.entered_home_city: Optional[str] = entered_home_city
-#
-#     def add_new_surfer(self):
-#         session = Session()
-#
-#         # Check that gender is entered
-#         if self.entered_gender is None or self.entered_gender == '':
-#             print(f"You have to choose a gender because of biology and shit.")
-#             return
-#
-#         # Check that first_name is entered
-#         if self.entered_first_name is None or self.entered_first_name == '':
-#             print(f"What is the surfer's first name?")
-#             return
-#
-#         # Check that last_name is entered
-#         if self.entered_last_name is None or self.entered_last_name == '':
-#             print(f"What is the surfer's last name?")
-#             return
-#
-#         # Check that a rep country is entered
-#         if self.entered_rep_country is None or self.entered_rep_country == '':
-#             print(f"What country is the surfer representing?")
-#             return
-#
-#         # If a home city is entered check that a home region is entered
-#         city_is_entered = self.entered_home_city is not None
-#         region_is_none = self.entered_home_region is None
-#         region_is_empty = self.entered_home_region == ''
-#         if city_is_entered and (region_is_none or region_is_empty):
-#             print(f"What region is the surfer's home town in?")
-#             return
-#
-#         # If a home city is entered check that a home country is entered
-#         country_is_none = self.entered_home_country is None
-#         country_is_empty = self.entered_home_country == ''
-#         if city_is_entered and (country_is_none or country_is_empty):
-#             print(f"What country is the surfer's home town in?")
-#             return
-#
-#         # Check to see if the entered_surfer exists
-#         query = (select(Surfers.surfer_id)
-#                  .join(Country, Country.country_id == Surfers.rep_country_id)
-#                  .where(and_(
-#                              Surfers.gender == self.entered_gender,
-#                              Surfers.first_name == self.entered_first_name,
-#                              Surfers.last_name == self.entered_last_name,
-#                              Country.country == self.entered_rep_country
-#                             )))
-#         result = session.execute(query)
-#         check_surfer = result.scalar()
-#
-#         if check_surfer is not None:
-#             print(f"{self.entered_first_name} {self.entered_last_name} "
-#                   f"of {self.entered_rep_country} has already been added.")
-#             return
-#
-#         # Get country_id from the country table
-#         query = (select(Country.country_id)
-#                  .where(Country.country == self.entered_rep_country))
-#         result = session.execute(query)
-#         entered_rep_country_id = result.scalar()
-#
-#         # Get city_id from the city table
-#         if self.entered_home_city is None or self.entered_home_city == '':
-#             entered_city_id = None
-#         else:
-#             query = (select(City.city_id)
-#                      .join(Region, Region.region_id == City.region_id)
-#                      .join(Country, Country.country_id == Region.country_id)
-#                      .where(and_(
-#                                  City.city == self.entered_home_city,
-#                                  Region.region == self.entered_home_region,
-#                                  Country.country == self.entered_home_country
-#                                 )))
-#             result = session.execute(query)
-#             entered_city_id = result.scalar()
-#
-#         new_surfer = Surfers(gender=self.entered_gender,
-#                              first_name=self.entered_first_name,
-#                              last_name=self.entered_last_name,
-#                              stance=self.entered_stance,
-#                              rep_country_id=entered_rep_country_id,
-#                              birthday=self.entered_birthday,
-#                              height=self.entered_height,
-#                              weight=self.entered_weight,
-#                              first_season=self.entered_first_season,
-#                              first_tour=self.entered_first_tour,
-#                              home_city_id=entered_city_id)
-#
-#         session.add(new_surfer)
-#         session.flush()
-#         session.commit()
-#
-#
-# class AddTour:
-#     def __init__(self,
-#                  entered_year: Optional[int] = None,
-#                  entered_gender: Optional[str] = None,
-#                  entered_tour_type: Optional[str] = None,
-#                  entered_tour_name: Optional[str] = None,
-#                  entered_event_name: Optional[str] = None,
-#                  entered_stop_nbr: Optional[int] = None,
-#                  entered_country: Optional[str] = None,
-#                  entered_region: Optional[str] = None,
-#                  entered_break_name: Optional[str] = None,
-#                  entered_open_date: Optional = None,
-#                  entered_close_date: Optional = None,
-#                  entered_round: Optional[str] = None,
-#                  entered_heat_nbr: Optional[str] = None,
-#                  entered_wind: Optional[str] = None,
-#                  entered_heat_date: Optional = None,
-#                  entered_duration: Optional[int] = None,
-#                  entered_wave_min: Optional[int] = None,
-#                  entered_wave_max: Optional[int] = None,
-#                  entered_pick_to_win_percent: Optional[float] = None,
-#                  entered_jersey_color: Optional[str] = None,
-#                  entered_status: Optional[str] = None,
-#                  entered_wave_1: Optional[float] = None,
-#                  entered_wave_2: Optional[float] = None,
-#                  entered_wave_3: Optional[float] = None,
-#                  entered_wave_4: Optional[float] = None,
-#                  entered_wave_5: Optional[float] = None,
-#                  entered_wave_6: Optional[float] = None,
-#                  entered_wave_7: Optional[float] = None,
-#                  entered_wave_8: Optional[float] = None,
-#                  entered_wave_9: Optional[float] = None,
-#                  entered_wave_10: Optional[float] = None,
-#                  entered_wave_11: Optional[float] = None,
-#                  entered_wave_12: Optional[float] = None,
-#                  entered_wave_13: Optional[float] = None,
-#                  entered_wave_14: Optional[float] = None,
-#                  entered_wave_15: Optional[float] = None):
-#
-#         self.entered_year: Optional[int] = entered_year
-#         self.entered_gender: Optional[str] = entered_gender
-#         self.entered_tour_type: Optional[str] = entered_tour_type
-#         self.entered_tour_name: Optional[str] = entered_tour_name
-#         self.entered_event_name: Optional[str] = entered_event_name
-#         self.entered_stop_nbr: Optional[int] = entered_stop_nbr
-#         self.entered_country: Optional[str] = entered_country
-#         self.entered_region: Optional[str] = entered_region
-#         self.entered_break_name: Optional[str] = entered_break_name
-#         self.entered_open_date: Optional = entered_open_date
-#         self.entered_close_date: Optional = entered_close_date
-#         self.entered_round: Optional[str] = entered_round
-#         self.entered_heat_nbr: Optional[str] = entered_heat_nbr
-#         self.entered_wind: Optional[str] = entered_wind
-#         self.entered_heat_date: Optional = entered_heat_date
-#         self.entered_duration: Optional[int] = entered_duration
-#         self.entered_wave_min: Optional[int] = entered_wave_min
-#         self.entered_wave_max: Optional[int] = entered_wave_max
-#         self.entered_pick_to_win_percent: Optional[float] = entered_pick_to_win_percent
-#         self.entered_jersey_color: Optional[str] = entered_jersey_color
-#         self.entered_status: Optional[str] = entered_status
-#         self.entered_wave_1: Optional[float] = entered_wave_1
-#         self.entered_wave_2: Optional[float] = entered_wave_2
-#         self.entered_wave_3: Optional[float] = entered_wave_3
-#         self.entered_wave_4: Optional[float] = entered_wave_4
-#         self.entered_wave_5: Optional[float] = entered_wave_5
-#         self.entered_wave_6: Optional[float] = entered_wave_6
-#         self.entered_wave_7: Optional[float] = entered_wave_7
-#         self.entered_wave_8: Optional[float] = entered_wave_8
-#         self.entered_wave_9: Optional[float] = entered_wave_9
-#         self.entered_wave_10: Optional[float] = entered_wave_10
-#         self.entered_wave_11: Optional[float] = entered_wave_11
-#         self.entered_wave_12: Optional[float] = entered_wave_12
-#         self.entered_wave_13: Optional[float] = entered_wave_13
-#         self.entered_wave_14: Optional[float] = entered_wave_14
-#         self.entered_wave_15: Optional[float] = entered_wave_15
-#
-#     def add_new_tour(self):
-#         session = Session()
-#
-#         # Check that the tour type has been entered
-#         if self.entered_tour_type is None or self.entered_tour_type == '':
-#             print(f"What type of tour is being added?")
-#             return
-#
-#         # Check that a year has been entered
-#         if self.entered_year is None or self.entered_year == '':
-#             print(f"What year did this tour take place?")
-#             return
-#
-#         # Check to see if the tour already exists
-#         query = (select(Tour.tour_id)
-#                  .where(and_(
-#                              Tour.year == self.entered_year,
-#                              Tour.gender == self.entered_gender,
-#                              Tour.tour_type == self.entered_tour_type
-#                             )))
-#
-#         result = session.execute(query)
-#         check_tour = result.scalar()
-#
-#         # Does the entered_country exist in the entered_continent
-#         if check_tour is not None:
-#             print(f"The {self.entered_year} {self.entered_gender}s {self.entered_tour_type} has already been added.")
-#             return
-#
-#         entered_tour_name = f"{self.entered_year} {self.entered_gender}s {self.entered_tour_type}"
-#
-#         new_tour = Tour(year=self.entered_year,
-#                         gender=self.entered_gender,
-#                         tour_type=self.entered_tour_type,
-#                         tour_name=entered_tour_name)
-#
-#         session.add(new_tour)
-#         session.flush()
-#         session.commit()
-#
-#     def add_new_event(self):
-#         session = Session()
-#
-#         # Check that the tour name has been entered
-#         if self.entered_tour_name is None or self.entered_tour_name == '':
-#             print(f"Which tour are you trying to add an event to?")
-#             return
-#
-#         # Check that the event name has been added
-#         if self.entered_event_name is None or self.entered_event_name == '':
-#             print(f"What is the name of the event you are adding?")
-#             return
-#
-#         # Check that the stop number has been added
-#         if self.entered_stop_nbr is None:
-#             print(f"What stop number is this event? You entered: {self.entered_stop_nbr}")
-#             return
-#
-#         # Check that the Country, Region, and Break were added
-#         if self.entered_country is None or self.entered_country == '':
-#             print(f"What country was this even in?")
-#             return
-#
-#         if self.entered_region is None or self.entered_region == '':
-#             print(f"What region of {self.entered_country} was this event in?")
-#             return
-#
-#         if self.entered_break_name is None or self.entered_break_name == '':
-#             print(f"What is the name of the break?")
-#             return
-#
-#         # Check to see if the entered_event exists in the entered_tour
-#         query = (select(Event.event_name)
-#                  .join(Tour, Tour.tour_id == Tour.tour_id)
-#                  .where(
-#                  and_(
-#                       Tour.tour_name == self.entered_tour_name,
-#                       Event.stop_nbr == self.entered_stop_nbr
-#                       )))
-#
-#         result = session.execute(query)
-#         check_event = result.scalar()
-#
-#         # Does the entered_event exist in the entered_tour
-#         if check_event is not None:
-#             print(f"The event {self.entered_event_name} "
-#                   f"in the {self.entered_tour_name} has already been added.")
-#             return
-#
-#         # Get tour_id from tour table
-#         query = (select(Tour.tour_id)
-#                  .where(Tour.tour_name == self.entered_tour_name))
-#         result = session.execute(query)
-#         entered_tour_id = result.scalar()
-#
-#         # Get break_id from break table
-#         query = (select(Break.break_id)
-#                  .join(Region, Break.region_id == Region.region_id)
-#                  .join(Country, Region.country_id == Country.country_id)
-#                  .where(and_(
-#                              Break.break_name == self.entered_break_name,
-#                              Region.region == self.entered_region,
-#                              Country.country == self.entered_country
-#                             )))
-#         result = session.execute(query)
-#         entered_break_id = result.scalar()
-#
-#         new_event = Event(event_name=self.entered_event_name,
-#                           tour_id=entered_tour_id,
-#                           stop_nbr=self.entered_stop_nbr,
-#                           break_id=entered_break_id,
-#                           open_date=self.entered_open_date,
-#                           close_date=self.entered_close_date)
-#
-#         session.add(new_event)
-#         session.flush()
-#         session.commit()
-#
-#     def add_new_round(self):
-#         session = Session()
-#
-#         # Check that text is entered for round
-#         if self.entered_round is None or self.entered_round == '':
-#             print(f"What is the name of the round you are creating?")
-#             return
-#
-#         # Create an instance of the Round class to add to wsl.round
-#         new_round = Round(round=self.entered_round)
-#
-#         session.add(new_round)
-#         session.flush()
-#         session.commit()
-#
-#     def add_new_heat_details(self):
-#         session = Session()
-#
-#         # Check to see if tour name is entered
-#         if self.entered_tour_name is None or self.entered_tour_name == '':
-#             print(f"Which tour are you trying to add an event to?")
-#             return
-#
-#
-#         # Check to see if event name is entered
-#         if self.entered_event_name is None or self.entered_event_name == '':
-#             print(f"What is the name of the event you are adding?")
-#             return
-#         else:
-#             # If it is entered see if it exists for the tour entered
-#             query = (select(Event.event_name)
-#                 .join(Tour, Tour.tour_id == Tour.tour_id)
-#                 .where(
-#                 and_(
-#                     Tour.tour_name == self.entered_tour_name,
-#                     Event.stop_nbr == self.entered_stop_nbr
-#                 )))
-#
-#             result = session.execute(query)
-#             check_event = result.scalar()
-#
-#             # Does the entered_event exist in the entered_tour
-#             if check_event is not None:
-#                 print(f"The event {self.entered_event_name} "
-#                       f"in the {self.entered_tour_name} has already been added.")
-#                 return
-#
-#
-#         # Check to see if round is entered
-#         # Get Round id
-#
-#
-#         # Check to see if heat nbr is entered for tour, event, round above
-#
-#     def add_new_surfers_to_heat(self):
-#         session = Session()
-#
-#         # Check to see if tour name is entered
-#         if self.entered_tour_name is None or self.entered_tour_name == '':
-#             print(f"Which tour are you trying to add an event to?")
-#             return
-#
-#
-#         # Check to see if event name is entered for tour entered
-#
-#
-#         # Check to see if round is entered
-#
-#
-#         # Check to see id heat nbr is ented for tour, event, and round
-#         # Get Heat id
-#
-#
-#         # Check if surfer first and last name is entered
-#         # Get Surfer id
-#
-#     def add_new_heat_results(self):
-#         session = Session()
-#
-#         # Check to see if tour is entered
-#         if self.entered_tour_name is None or self.entered_tour_name == '':
-#             print(f"Which tour are you trying to add an event to?")
-#             return
-#
-#         # Check to see if event is entered for tour entered
-#
-#
-#         # Check to see if round is entered
-#
-#
-#         # Check to see that heat nbr is entered
-#         # Get Heat id
-#
-#
-#         # Check to see if surfer first and last name is entered
-#         # Get surfer id
-#
+class AddSurfer:
+    def __init__(self,
+                 entered_gender: str = None,
+                 entered_first_name: str = None,
+                 entered_last_name: str = None,
+                 entered_stance: Optional[str] = None,
+                 entered_rep_country: str = None,
+                 entered_birthday: Optional = None,
+                 entered_height: Optional[int] = None,
+                 entered_weight: Optional[int] = None,
+                 entered_first_season: Optional[int] = None,
+                 entered_first_tour: Optional[str] = None,
+                 entered_home_country: Optional[str] = None,
+                 entered_home_region: Optional[str] = None,
+                 entered_home_city: Optional[str] = None
+                 ):
+
+        self.entered_gender: str = entered_gender
+        self.entered_first_name: str = entered_first_name
+        self.entered_last_name: str = entered_last_name
+        self.entered_stance: Optional[str] = entered_stance
+        self.entered_rep_country: str = entered_rep_country
+        self.entered_birthday: Optional = entered_birthday
+        self.entered_height: Optional[int] = entered_height
+        self.entered_weight: Optional[int] = entered_weight
+        self.entered_first_season: Optional[int] = entered_first_season
+        self.entered_first_tour: Optional[str] = entered_first_tour
+        self.entered_home_country: Optional[str] = entered_home_country
+        self.entered_home_region: Optional[str] = entered_home_region
+        self.entered_home_city: Optional[str] = entered_home_city
+
+    def add_new_surfer(self):
+        session = Session()
+
+        # Check that gender is entered
+        if self.entered_gender is None or self.entered_gender == '':
+            print(f"You have to choose a gender because of biology and shit.")
+            return
+
+        # Check that first_name is entered
+        if self.entered_first_name is None or self.entered_first_name == '':
+            print(f"What is the surfer's first name?")
+            return
+
+        # Check that last_name is entered
+        if self.entered_last_name is None or self.entered_last_name == '':
+            print(f"What is the surfer's last name?")
+            return
+
+        # Check that a rep country is entered
+        if self.entered_rep_country is None or self.entered_rep_country == '':
+            print(f"What country is the surfer representing?")
+            return
+
+        # If a home city is entered check that a home region is entered
+        city_is_entered = self.entered_home_city is not None
+        region_is_none = self.entered_home_region is None
+        region_is_empty = self.entered_home_region == ''
+        if city_is_entered and (region_is_none or region_is_empty):
+            print(f"What region is the surfer's home town in?")
+            return
+
+        # If a home city is entered check that a home country is entered
+        country_is_none = self.entered_home_country is None
+        country_is_empty = self.entered_home_country == ''
+        if city_is_entered and (country_is_none or country_is_empty):
+            print(f"What country is the surfer's home town in?")
+            return
+
+        # Check to see if the entered_surfer exists
+        query = (select(Surfers.surfer_id)
+                 .join(Country, Country.country_id == Surfers.rep_country_id)
+                 .where(and_(
+                             Surfers.gender == self.entered_gender,
+                             Surfers.first_name == self.entered_first_name,
+                             Surfers.last_name == self.entered_last_name,
+                             Country.country == self.entered_rep_country
+                            )))
+        result = session.execute(query)
+        check_surfer = result.scalar()
+
+        if check_surfer is not None:
+            print(f"{self.entered_first_name} {self.entered_last_name} "
+                  f"of {self.entered_rep_country} has already been added.")
+            return
+
+        # Get country_id from the country table
+        query = (select(Country.country_id)
+                 .where(Country.country == self.entered_rep_country))
+        result = session.execute(query)
+        entered_rep_country_id = result.scalar()
+
+        # Get city_id from the city table
+        if self.entered_home_city is None or self.entered_home_city == '':
+            entered_city_id = None
+        else:
+            query = (select(City.city_id)
+                     .join(Region, Region.region_id == City.region_id)
+                     .join(Country, Country.country_id == Region.country_id)
+                     .where(and_(
+                                 City.city == self.entered_home_city,
+                                 Region.region == self.entered_home_region,
+                                 Country.country == self.entered_home_country
+                                )))
+            result = session.execute(query)
+            entered_city_id = result.scalar()
+
+        new_surfer = Surfers(gender=self.entered_gender,
+                             first_name=self.entered_first_name,
+                             last_name=self.entered_last_name,
+                             stance=self.entered_stance,
+                             rep_country_id=entered_rep_country_id,
+                             birthday=self.entered_birthday,
+                             height=self.entered_height,
+                             weight=self.entered_weight,
+                             first_season=self.entered_first_season,
+                             first_tour=self.entered_first_tour,
+                             home_city_id=entered_city_id)
+
+        session.add(new_surfer)
+        session.flush()
+        session.commit()
+
+
+class AddTour:
+    def __init__(self,
+                 entered_year: Optional[int] = None,
+                 entered_gender: Optional[str] = None,
+                 entered_tour_type: Optional[str] = None,
+                 entered_tour_name: Optional[str] = None,
+                 entered_event_name: Optional[str] = None,
+                 entered_stop_nbr: Optional[int] = None,
+                 entered_country: Optional[str] = None,
+                 entered_region: Optional[str] = None,
+                 entered_break_name: Optional[str] = None,
+                 entered_open_date: Optional = None,
+                 entered_close_date: Optional = None,
+                 entered_round: Optional[str] = None,
+                 entered_heat_nbr: Optional[str] = None,
+                 entered_wind: Optional[str] = None,
+                 entered_heat_date: Optional = None,
+                 entered_duration: Optional[int] = None,
+                 entered_wave_min: Optional[int] = None,
+                 entered_wave_max: Optional[int] = None,
+                 entered_pick_to_win_percent: Optional[float] = None,
+                 entered_jersey_color: Optional[str] = None,
+                 entered_status: Optional[str] = None,
+                 entered_wave_1: Optional[float] = None,
+                 entered_wave_2: Optional[float] = None,
+                 entered_wave_3: Optional[float] = None,
+                 entered_wave_4: Optional[float] = None,
+                 entered_wave_5: Optional[float] = None,
+                 entered_wave_6: Optional[float] = None,
+                 entered_wave_7: Optional[float] = None,
+                 entered_wave_8: Optional[float] = None,
+                 entered_wave_9: Optional[float] = None,
+                 entered_wave_10: Optional[float] = None,
+                 entered_wave_11: Optional[float] = None,
+                 entered_wave_12: Optional[float] = None,
+                 entered_wave_13: Optional[float] = None,
+                 entered_wave_14: Optional[float] = None,
+                 entered_wave_15: Optional[float] = None):
+
+        self.entered_year: Optional[int] = entered_year
+        self.entered_gender: Optional[str] = entered_gender
+        self.entered_tour_type: Optional[str] = entered_tour_type
+        self.entered_tour_name: Optional[str] = entered_tour_name
+        self.entered_event_name: Optional[str] = entered_event_name
+        self.entered_stop_nbr: Optional[int] = entered_stop_nbr
+        self.entered_country: Optional[str] = entered_country
+        self.entered_region: Optional[str] = entered_region
+        self.entered_break_name: Optional[str] = entered_break_name
+        self.entered_open_date: Optional = entered_open_date
+        self.entered_close_date: Optional = entered_close_date
+        self.entered_round: Optional[str] = entered_round
+        self.entered_heat_nbr: Optional[str] = entered_heat_nbr
+        self.entered_wind: Optional[str] = entered_wind
+        self.entered_heat_date: Optional = entered_heat_date
+        self.entered_duration: Optional[int] = entered_duration
+        self.entered_wave_min: Optional[int] = entered_wave_min
+        self.entered_wave_max: Optional[int] = entered_wave_max
+        self.entered_pick_to_win_percent: Optional[float] = entered_pick_to_win_percent
+        self.entered_jersey_color: Optional[str] = entered_jersey_color
+        self.entered_status: Optional[str] = entered_status
+        self.entered_wave_1: Optional[float] = entered_wave_1
+        self.entered_wave_2: Optional[float] = entered_wave_2
+        self.entered_wave_3: Optional[float] = entered_wave_3
+        self.entered_wave_4: Optional[float] = entered_wave_4
+        self.entered_wave_5: Optional[float] = entered_wave_5
+        self.entered_wave_6: Optional[float] = entered_wave_6
+        self.entered_wave_7: Optional[float] = entered_wave_7
+        self.entered_wave_8: Optional[float] = entered_wave_8
+        self.entered_wave_9: Optional[float] = entered_wave_9
+        self.entered_wave_10: Optional[float] = entered_wave_10
+        self.entered_wave_11: Optional[float] = entered_wave_11
+        self.entered_wave_12: Optional[float] = entered_wave_12
+        self.entered_wave_13: Optional[float] = entered_wave_13
+        self.entered_wave_14: Optional[float] = entered_wave_14
+        self.entered_wave_15: Optional[float] = entered_wave_15
+
+    def add_new_tour(self):
+        session = Session()
+
+        # Check that the tour type has been entered
+        if self.entered_tour_type is None or self.entered_tour_type == '':
+            print(f"What type of tour is being added?")
+            return
+
+        # Check that a year has been entered
+        if self.entered_year is None or self.entered_year == '':
+            print(f"What year did this tour take place?")
+            return
+
+        # Check to see if the tour already exists
+        query = (select(Tour.tour_id)
+                 .where(and_(
+                             Tour.year == self.entered_year,
+                             Tour.gender == self.entered_gender,
+                             Tour.tour_type == self.entered_tour_type
+                            )))
+
+        result = session.execute(query)
+        check_tour = result.scalar()
+
+        # Does the entered_country exist in the entered_continent
+        if check_tour is not None:
+            print(f"The {self.entered_year} {self.entered_gender}s {self.entered_tour_type} has already been added.")
+            return
+
+        entered_tour_name = f"{self.entered_year} {self.entered_gender}s {self.entered_tour_type}"
+
+        new_tour = Tour(year=self.entered_year,
+                        gender=self.entered_gender,
+                        tour_type=self.entered_tour_type,
+                        tour_name=entered_tour_name)
+
+        session.add(new_tour)
+        session.flush()
+        session.commit()
+
+    def add_new_event(self):
+        session = Session()
+
+        # Check that the tour name has been entered
+        if self.entered_tour_name is None or self.entered_tour_name == '':
+            print(f"Which tour are you trying to add an event to?")
+            return
+
+        # Check that the event name has been added
+        if self.entered_event_name is None or self.entered_event_name == '':
+            print(f"What is the name of the event you are adding?")
+            return
+
+        # Check that the stop number has been added
+        if self.entered_stop_nbr is None:
+            print(f"What stop number is this event? You entered: {self.entered_stop_nbr}")
+            return
+
+        # Check that the Country, Region, and Break were added
+        if self.entered_country is None or self.entered_country == '':
+            print(f"What country was this even in?")
+            return
+
+        if self.entered_region is None or self.entered_region == '':
+            print(f"What region of {self.entered_country} was this event in?")
+            return
+
+        if self.entered_break_name is None or self.entered_break_name == '':
+            print(f"What is the name of the break?")
+            return
+
+        # Check to see if the entered_event exists in the entered_tour
+        query = (select(Event.event_name)
+                 .join(Tour, Tour.tour_id == Tour.tour_id)
+                 .where(
+                 and_(
+                      Tour.tour_name == self.entered_tour_name,
+                      Event.stop_nbr == self.entered_stop_nbr
+                      )))
+
+        result = session.execute(query)
+        check_event = result.scalar()
+
+        # Does the entered_event exist in the entered_tour
+        if check_event is not None:
+            print(f"The event {self.entered_event_name} "
+                  f"in the {self.entered_tour_name} has already been added.")
+            return
+
+        # Get tour_id from tour table
+        query = (select(Tour.tour_id)
+                 .where(Tour.tour_name == self.entered_tour_name))
+        result = session.execute(query)
+        entered_tour_id = result.scalar()
+
+        # Get break_id from break table
+        query = (select(Break.break_id)
+                 .join(Region, Break.region_id == Region.region_id)
+                 .join(Country, Region.country_id == Country.country_id)
+                 .where(and_(
+                             Break.break_name == self.entered_break_name,
+                             Region.region == self.entered_region,
+                             Country.country == self.entered_country
+                            )))
+        result = session.execute(query)
+        entered_break_id = result.scalar()
+
+        new_event = Event(event_name=self.entered_event_name,
+                          tour_id=entered_tour_id,
+                          stop_nbr=self.entered_stop_nbr,
+                          break_id=entered_break_id,
+                          open_date=self.entered_open_date,
+                          close_date=self.entered_close_date)
+
+        session.add(new_event)
+        session.flush()
+        session.commit()
+
+    def add_new_round(self):
+        session = Session()
+
+        # Check that text is entered for round
+        if self.entered_round is None or self.entered_round == '':
+            print(f"What is the name of the round you are creating?")
+            return
+
+        # Create an instance of the Round class to add to wsl.round
+        new_round = Round(round=self.entered_round)
+
+        session.add(new_round)
+        session.flush()
+        session.commit()
+
+    def add_new_heat_details(self):
+        session = Session()
+
+        # Check to see if tour name is entered
+        if self.entered_tour_name is None or self.entered_tour_name == '':
+            print(f"Which tour are you trying to add an event to?")
+            return
+
+
+        # Check to see if event name is entered
+        if self.entered_event_name is None or self.entered_event_name == '':
+            print(f"What is the name of the event you are adding?")
+            return
+        else:
+            # If it is entered see if it exists for the tour entered
+            query = (select(Event.event_name)
+                .join(Tour, Tour.tour_id == Tour.tour_id)
+                .where(
+                and_(
+                    Tour.tour_name == self.entered_tour_name,
+                    Event.stop_nbr == self.entered_stop_nbr
+                )))
+
+            result = session.execute(query)
+            check_event = result.scalar()
+
+            # Does the entered_event exist in the entered_tour
+            if check_event is not None:
+                print(f"The event {self.entered_event_name} "
+                      f"in the {self.entered_tour_name} has already been added.")
+                return
+
+
+        # Check to see if round is entered
+        # Get Round id
+
+
+        # Check to see if heat nbr is entered for tour, event, round above
+
+    def add_new_surfers_to_heat(self):
+        session = Session()
+
+        # Check to see if tour name is entered
+        if self.entered_tour_name is None or self.entered_tour_name == '':
+            print(f"Which tour are you trying to add an event to?")
+            return
+
+
+        # Check to see if event name is entered for tour entered
+
+
+        # Check to see if round is entered
+
+
+        # Check to see id heat nbr is ented for tour, event, and round
+        # Get Heat id
+
+
+        # Check if surfer first and last name is entered
+        # Get Surfer id
+
+    def add_new_heat_results(self):
+        session = Session()
+
+        # Check to see if tour is entered
+        if self.entered_tour_name is None or self.entered_tour_name == '':
+            print(f"Which tour are you trying to add an event to?")
+            return
+
+        # Check to see if event is entered for tour entered
+
+
+        # Check to see if round is entered
+
+
+        # Check to see that heat nbr is entered
+        # Get Heat id
+
+
+        # Check to see if surfer first and last name is entered
+        # Get surfer id
+
 
 ########################################################################################################################
 # 5.0 - Testing
 
 
 # Enter a New Country
-inst = AddLocation(
-                   entered_country="Australia")
+inst = AddLocation(entered_continent='South America',
+                   entered_country='Brazil')
 inst.add_new_country()
 
 

@@ -352,11 +352,14 @@ class AddLocation:
 
         # Check to see if a region was entered
         if self.entered_region is None or self.entered_region == '':
-            no_entry_error = (f"\n{self.word:{self.char}^{self.width}}\n"
-                              f"You seem a little lost.\n "
-                              f"I see that you're in the country of {self.entered_country}.\n"
-                              f"What region are you in?\n"
-                              f"You Entered: {self.entered_region}\n")
+            no_entry_error = (f"\n"
+                              f"{self.div_dict['input_error'][0]:{self.div_dict['input_error'][1]}^{self.div_dict['input_error'][2]}}" 
+                              f"\nRegion cannot be None or an empty string."
+                              f"\n{self.div_dict['wipe_out_wav'][0]:{self.div_dict['wipe_out_wav'][1]}^{self.div_dict['wipe_out_wav'][2]}}"
+                              f"\nYou seem a little lost. What region are you in??" 
+                              f"\nEntered Continent: {self.entered_continent}"
+                              f"\nEntered Country: {self.entered_country}"
+                              f"\nEntered Region: {self.entered_region}")
             raise ValueError(no_entry_error)
 
     def was_city_entered(self):
@@ -364,11 +367,15 @@ class AddLocation:
 
         # Check to see if a city was entered
         if self.entered_city is None or self.entered_city == '':
-            no_entry_error = (f"\n{self.word:{self.char}^{self.width}}\n"
-                              f"You seem a little lost.\n"
-                              f"I see that you're in the region of {self.entered_region}.\n"
-                              f"What city are you in?\n"
-                              f"You Entered: {self.entered_region}\n")
+            no_entry_error = (f"\n"
+                              f"{self.div_dict['input_error'][0]:{self.div_dict['input_error'][1]}^{self.div_dict['input_error'][2]}}" 
+                              f"\nCity cannot be None or an empty string."
+                              f"\n{self.div_dict['wipe_out_wav'][0]:{self.div_dict['wipe_out_wav'][1]}^{self.div_dict['wipe_out_wav'][2]}}"
+                              f"\nYou seem a little lost. What city are you in??" 
+                              f"\nEntered Continent: {self.entered_continent}"
+                              f"\nEntered Country: {self.entered_country}"
+                              f"\nEntered Region: {self.entered_region}"
+                              f"\nEntered City: {self.entered_city}")
             raise ValueError(no_entry_error)
 
     def was_break_name_entered(self):
@@ -376,11 +383,15 @@ class AddLocation:
 
         # Check to see if a break name was entered
         if self.entered_break_name is None or self.entered_break_name == '':
-            no_entry_error = (f"\n{self.word:{self.char}^{self.width}}\n"
-                              f"You seem a little lost."
-                              f"I see that you're in the city of {self.entered_city}.\n"
-                              f"What break are you at?\n"
-                              f"You entered: {self.entered_break_name}\n")
+            no_entry_error = (f"\n"
+                              f"{self.div_dict['input_error'][0]:{self.div_dict['input_error'][1]}^{self.div_dict['input_error'][2]}}" 
+                              f"\nBreak Name cannot be None or an empty string."
+                              f"\n{self.div_dict['wipe_out_wav'][0]:{self.div_dict['wipe_out_wav'][1]}^{self.div_dict['wipe_out_wav'][2]}}"
+                              f"\nYou seem a little lost. What break are you at?" 
+                              f"\nEntered Continent: {self.entered_continent}"
+                              f"\nEntered Country: {self.entered_country}"
+                              f"\nEntered Region: {self.entered_region}"
+                              f"\nEntered Break Name: {self.entered_break_name}")
             raise ValueError(no_entry_error)
 
     def add_new_country(self):
@@ -507,11 +518,11 @@ class AddLocation:
                  .join(Country, Country.country_id == Region.country_id)
                  .join(Continent, Continent.continent_id == Country.continent_id)
                  .where(and_(
-                 Continent.continent == self.entered_continent,
-                 Country.country == self.entered_country,
-                 Region.region == self.entered_region,
-                 City.city == self.entered_city
-                )))
+                  Continent.continent == self.entered_continent,
+                  Country.country == self.entered_country,
+                  Region.region == self.entered_region,
+                  City.city == self.entered_city
+                 )))
 
         result = session.execute(query)
         check_city = result.scalar()
@@ -1035,8 +1046,8 @@ class AddTour:
 # inst = AddLocation(entered_continent='North America',
 #                    entered_country='Hawaii')
 # inst.add_new_country()
-
-
+#
+#
 # # Enter a New Region
 # inst = AddLocation(entered_continent='North America',
 #                    entered_country='Hawaii',
@@ -1046,16 +1057,16 @@ class AddTour:
 
 
 # # Enter a New City
-# inst = AddLocation(entered_continent='North America',
-#                    entered_country='USA',
-#                    entered_region='California',
+# inst = AddLocation(entered_continent='Oceania',
+#                    entered_country='North Carolina',
+#                    entered_region='Oahu',
 #                    entered_city='North Shore')
 #
 # inst.add_new_city()
 
 # # Enter a New Break
 # inst = AddLocation(entered_continent='North America',
-#                    entered_country='California',
+#                    entered_country='Hawaii',
 #                    entered_region='Oahu',
 #                    entered_break_name='Pipeline',
 #                    entered_break_type='Reef',

@@ -653,23 +653,39 @@ class AddSurfer:
         self.entered_home_region: Optional[str] = entered_home_region
         self.entered_home_city: Optional[str] = entered_home_city
 
+    def was_gender_entered(self):
+        if self.entered_gender is None or self.entered_gender == '':
+            no_entry_error = (f"\n"
+                              f"{self.div_dict['input_error'][0]:{self.div_dict['input_error'][1]}^{self.div_dict['input_error'][2]}}"
+                              f"\nContinent cannot be None or an empty string."
+                              f"\n{self.div_dict['wipe_out_wav'][0]:{self.div_dict['wipe_out_wav'][1]}^{self.div_dict['wipe_out_wav'][2]}}"
+                              f"\nYou seem a little lost. What continent are you on?"
+                              f"\nEntered Continent: {self.entered_continent}")
+            raise ValueError(no_entry_error)
+
+    def was_first_name_entered(self):
+        pass
+
+    def was_last_name_entered(self):
+        pass
+
+    def was_rep_country_entered(self):
+        pass
+
     def add_new_surfer(self):
         session = Session()
 
-        # Check that gender is entered
-        if self.entered_gender is None or self.entered_gender == '':
-            print(f"You have to choose a gender because of biology and shit.")
-            return
+        # Was gender entered?
+        self.was_gender_entered()
 
-        # Check that first_name is entered
-        if self.entered_first_name is None or self.entered_first_name == '':
-            print(f"What is the surfer's first name?")
-            return
+        # Was a first name entered?
+        self.was_first_name_entered()
 
-        # Check that last_name is entered
-        if self.entered_last_name is None or self.entered_last_name == '':
-            print(f"What is the surfer's last name?")
-            return
+        # Was a last name entered?
+        self.was_last_name_entered()
+
+        # Was a representative country entered?
+        self.was_rep_country_entered()
 
         # Check that a rep country is entered
         if self.entered_rep_country is None or self.entered_rep_country == '':

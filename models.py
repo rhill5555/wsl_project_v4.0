@@ -320,16 +320,17 @@ class AddLocation:
         self.entered_blown_out: Optional[float] = entered_blown_out
         self.entered_too_small: Optional[float] = entered_too_small
 
-    word = 'Input Error'
-    char = '='
-    width = 50
+    div_dict = {'input_error': ['Input Error', '=', 60],
+                'wipe_out_wav': ['Wipe Out', '~', 60]}
 
     def was_continent_entered(self):
         if self.entered_continent is None or self.entered_continent == '':
-            no_entry_error = (f"\n{self.word:{self.char}^{self.width}}\n" 
-                              f"You seem a little lost. What continent are you on?\n" 
-                              f"Continent cannot be None or an empty string.\n"
-                              f"Your Entered: {self.entered_continent}")
+            no_entry_error = (f"\n"
+                              f"{self.div_dict['input_error'][0]:{self.div_dict['input_error'][1]}^{self.div_dict['input_error'][2]}}" 
+                              f"\nContinent cannot be None or an empty string."
+                              f"\n{self.div_dict['wipe_out_wav'][0]:{self.div_dict['wipe_out_wav'][1]}^{self.div_dict['wipe_out_wav'][2]}}"
+                              f"\nYou seem a little lost. What continent are you on?" 
+                              f"\nEntered Continent: {self.entered_continent}")
             raise ValueError(no_entry_error)
 
     def was_country_entered(self):
@@ -337,10 +338,13 @@ class AddLocation:
 
         # Check to see if a country was entered
         if self.entered_country is None or self.entered_country == '':
-            no_entry_error = (f"\n{self.word:{self.char}^{self.width}}\n"
-                              f"You seem a little lost. What country are you in?\n"
-                              f"Country cannot be None or an empty string.\n"
-                              f"You Entered: {self.entered_country}\n")
+            no_entry_error = (f"\n"
+                              f"{self.div_dict['input_error'][0]:{self.div_dict['input_error'][1]}^{self.div_dict['input_error'][2]}}" 
+                              f"\nCountry cannot be None or an empty string."
+                              f"\n{self.div_dict['wipe_out_wav'][0]:{self.div_dict['wipe_out_wav'][1]}^{self.div_dict['wipe_out_wav'][2]}}"
+                              f"\nYou seem a little lost. What country are you in??" 
+                              f"\nEntered Continent: {self.entered_continent}"
+                              f"\nEntered Country: {self.entered_country}")
             raise ValueError(no_entry_error)
 
     def was_region_entered(self):
@@ -378,28 +382,6 @@ class AddLocation:
                               f"What break are you at?\n"
                               f"You entered: {self.entered_break_name}\n")
             raise ValueError(no_entry_error)
-        else:
-            # Does the entered break exist in the entered region, country, and continent?
-            query = (select(Break.break_id)
-                     .join(Region, Region.region_id == Break.region_id)
-                     .join(Country, Country.country_id == Region.country_id)
-                     .join(Continent, Continent.continent_id == Country.continent_id)
-                     .where(and_(
-                                 Continent.continent == self.entered_continent,
-                                 Country.country == self.entered_country,
-                                 Region.region == self.entered_region,
-                                 Break.break_name == self.entered_break_name
-                                )))
-
-            result = session.execute(query)
-            check_break = result.scalar()
-
-            # Did the query return a break? If so it has already been added to wsl.break
-            if check_break is not None:
-                print(f"The wave at {self.entered_break_name} in "
-                      f"{self.entered_region}, {self.entered_country} "
-                      f"on the continent of {self.entered_continent} has already been discovered.")
-            return
 
     def add_new_country(self):
         session = Session()
@@ -1050,17 +1032,17 @@ class AddTour:
 
 
 # # Enter a New Country
-# inst = AddLocation(entered_continent='South America',
-#                    entered_country='Brazil')
+# inst = AddLocation(entered_continent='North America',
+#                    entered_country='Hawaii')
 # inst.add_new_country()
 
 
-# Enter a New Region
-inst = AddLocation(entered_continent='North America',
-                   entered_country='Hawaii',
-                   entered_region='Oahu')
-
-inst.add_new_region()
+# # Enter a New Region
+# inst = AddLocation(entered_continent='North America',
+#                    entered_country='Hawaii',
+#                    entered_region='Oahu')
+#
+# inst.add_new_region()
 
 
 # # Enter a New City

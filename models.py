@@ -1174,9 +1174,6 @@ class AddTour:
     def add_new_heat_details(self):
         session = Session()
 
-        div_dict = {'input_error': ['Input Error', '=', 60],
-                    'wipe_out_wav': ['Wipe Out', '~', 60]}
-
         # Was tour, event, round, and heat entered?
         self.was_tour_name_entered()
         self.was_event_name_entered()
@@ -1277,6 +1274,24 @@ class AddTour:
                               f"\nEntered Surfer: {self.entered_surfer}")
             raise ValueError(no_entry_error)
 
+        # Does this surfer aready exist in this heat?
+        query = (select(HeatSurfers.surfer_heat_id)
+                        .where(and_(HeatSurfers.heat_id == entered_heat_id,
+                                    HeatSurfers.surfer_id == entered_surfer_id
+                                    )))
+        result = session.execute(query)
+        check_heat_surfer = result.scalar()
+
+        # Does the entered surfer and heat already exist for the round, event, and tour
+        if check_heat_surfer is not None:
+            print(f"The entered surfer already exists in the entered heat."
+                  f"\nEntered Tour: {self.entered_tour_name}"
+                  f"\nEntered Event: {self.entered_event_name}"
+                  f"\nEntered Round: {self.entered_round}"
+                  f"\nEntered Heat Number: {self.entered_heat_nbr}"
+                  f"\nEntered Surfer: {self.entered_surfer}")
+            return
+
         new_surfer_in_heat = HeatSurfers(heat_id=entered_heat_id,
                                          surfer_id=entered_surfer_id)
 
@@ -1287,23 +1302,30 @@ class AddTour:
     def add_new_heat_results(self):
         session = Session()
 
-        # Check to see if tour is entered
-        if self.entered_tour_name is None or self.entered_tour_name == '':
-            print(f"Which tour are you trying to add an event to?")
-            return
+        # Was tour, event, round, heat, and surfer entered?
+        self.was_tour_name_entered()
+        self.was_event_name_entered()
+        self.was_round_entered()
+        self.was_heat_nbr_entered()
+        self.was_surfer_entered()
 
-        # Check to see if event is entered for tour entered
+        # Check to see if heat number and surfer exists in tour, event, round
+        query = (select(HeatSurfers.surfer_heat_id)
+                 .join(Round, Round.round_id == HeatDetails.round_id)
+                 .join(Event, Event.event_id == HeatDetails.event_id)
+                 .join(Tour, Tour.tour_id == Event.tour_id)
+                 .join(HeatDetails, HeatDetails.heat_id == HeatSurfers.heat_id)
+                 .join(Surfers, Surfers.surfer_id == HeatSurfers.heat_id)
+                 .where(and_(
+                            Tour.tour_name == self.entered_tour_name,
+                            Event.event_name == self.entered_event_name,
+                            Round.round == self.entered_round,
+                            HeatDetails.heat_nbr == self.entered_heat_nbr,
+                            Surfers.full_name == self.entered_surfer
+                            )))
 
-
-        # Check to see if round is entered
-
-
-        # Check to see that heat nbr is entered
-        # Get Heat id
-
-
-        # Check to see if surfer first and last name is entered
-        # Get surfer id
+        result = session.execute(query)
+        entered_heat_surfer_id = result.scalar()
 
 
 ########################################################################################################################
@@ -1325,10 +1347,10 @@ class AddTour:
 
 
 # # Enter a New City
-# inst = AddLocation(entered_continent='South America',
-#                    entered_country='Brazil',
-#                    entered_region='Sao Paulo',
-#                    entered_city='Ubatuba')
+# inst = AddLocation(entered_continent='North America',
+#                    entered_country='Hawaii',
+#                    entered_region='Oahu',
+#                    entered_city='Honolulu')
 #
 # inst.add_new_city()
 
@@ -1349,20 +1371,20 @@ class AddTour:
 
 # # Enter a New Surfer
 # inst = AddSurfer(entered_gender='Men',
-#                  entered_first_name='Kelly',
-#                  entered_last_name='Slater',
+#                  entered_first_name='Ezekiel',
+#                  entered_last_name='Lau',
 #                  entered_stance='Regular',
 #                  entered_rep_continent='North America',
-#                  entered_rep_country='USA',
-#                  entered_birthday='1972-02-11',
-#                  entered_height=175,
-#                  entered_weight=73,
-#                  entered_first_season=1989,
-#                  entered_first_tour='Championship Tour',
+#                  entered_rep_country='Hawaii',
+#                  entered_birthday='1993-11-23',
+#                  entered_height=186,
+#                  entered_weight=92,
+#                  entered_first_season=2008,
+#                  entered_first_tour='Qualifying Series',
 #                  entered_home_continent='North America',
-#                  entered_home_country='USA',
-#                  entered_home_region='Florida',
-#                  entered_home_city='Cocoa Beach')
+#                  entered_home_country='Hawaii',
+#                  entered_home_region='Oahu',
+#                  entered_home_city='Honolulu')
 # inst.add_new_surfer()
 
 # # Enter a New Tour
@@ -1399,11 +1421,11 @@ class AddTour:
 #                entered_wave_max=6)
 # inst.add_new_heat_details()
 
-# Add new surfer to a heat
-inst = AddTour(entered_tour_name='2022 Mens Championship Tour',
-               entered_event_name='Billabong Prop Pipeline',
-               entered_round='Opening Round',
-               entered_heat_nbr='1',
-               entered_surfer='Owen Wright'
-               )
-inst.add_new_surfers_to_heat()
+# # Add new surfer to a heat
+# inst = AddTour(entered_tour_name='2022 Mens Championship Tour',
+#                entered_event_name='Billabong Prop Pipeline',
+#                entered_round='Opening Round',
+#                entered_heat_nbr='1',
+#                entered_surfer='Owen Wright'
+#                )
+# inst.add_new_surfers_to_heat()

@@ -123,6 +123,7 @@ class Surfers(Base):
     gender = Column(String(length=6), nullable=False)
     first_name = Column(String(length=50), nullable=False)
     last_name = Column(String(length=50), nullable=False)
+    full_name = Column(String(length=100), nullable=False)
     stance = Column(String(length=10))
     rep_country_id = Column(Integer, ForeignKey('country.country_id'), nullable=False)
     birthday = Column(Date)
@@ -138,6 +139,7 @@ class Surfers(Base):
                f"gender={self.gender!r}, " \
                f"first_name={self.first_name!r}, " \
                f"last_name={self.last_name!r}, " \
+               f"full_name={self.full_name!r}, " \
                f"stance={self.stance!r}, " \
                f"rep_country_id={self.rep_country_id!r}, " \
                f"birthday={self.birthday!r}, " \
@@ -781,9 +783,13 @@ class AddSurfer:
         result = session.execute(query)
         entered_rep_country_id = result.scalar()
 
+        # Get full name
+        entered_full_name = f"{self.entered_first_name} {self.entered_last_name}"
+
         new_surfer = Surfers(gender=self.entered_gender,
                              first_name=self.entered_first_name,
                              last_name=self.entered_last_name,
+                             full_name=entered_full_name,
                              stance=self.entered_stance,
                              rep_country_id=entered_rep_country_id,
                              birthday=self.entered_birthday,
@@ -819,6 +825,7 @@ class AddTour:
                  entered_duration: Optional[int] = None,
                  entered_wave_min: Optional[int] = None,
                  entered_wave_max: Optional[int] = None,
+                 entered_surfer: Optional[str] = None,
                  entered_pick_to_win_percent: Optional[float] = None,
                  entered_jersey_color: Optional[str] = None,
                  entered_status: Optional[str] = None,
@@ -857,6 +864,7 @@ class AddTour:
         self.entered_duration: Optional[int] = entered_duration
         self.entered_wave_min: Optional[int] = entered_wave_min
         self.entered_wave_max: Optional[int] = entered_wave_max
+        self.entered_surfer: Optional[str] = entered_surfer
         self.entered_pick_to_win_percent: Optional[float] = entered_pick_to_win_percent
         self.entered_jersey_color: Optional[str] = entered_jersey_color
         self.entered_status: Optional[str] = entered_status
@@ -962,8 +970,6 @@ class AddTour:
             raise ValueError(no_entry_error)
 
     def was_country_entered(self):
-        session = Session()
-
         # Check to see if a country was entered
         if self.entered_country is None or self.entered_country == '':
             no_entry_error = (f"\n"
@@ -976,8 +982,6 @@ class AddTour:
             raise ValueError(no_entry_error)
 
     def was_region_entered(self):
-        session = Session()
-
         # Check to see if a region was entered
         if self.entered_region is None or self.entered_region == '':
             no_entry_error = (f"\n"
@@ -991,8 +995,6 @@ class AddTour:
             raise ValueError(no_entry_error)
 
     def was_break_name_entered(self):
-        session = Session()
-
         # Check to see if a break name was entered
         if self.entered_break_name is None or self.entered_break_name == '':
             no_entry_error = (f"\n"
@@ -1004,6 +1006,20 @@ class AddTour:
                               f"\nEntered Country: {self.entered_country}"
                               f"\nEntered Region: {self.entered_region}"
                               f"\nEntered Break Name: {self.entered_break_name}")
+            raise ValueError(no_entry_error)
+
+    def was_surfer_entered(self):
+        # Check to see if a surfer was entered
+        if self.entered_surfer is None or self.entered_surfer == '':
+            no_entry_error = (f"\n"
+                              f"{self.div_dict['input_error'][0]:{self.div_dict['input_error'][1]}^{self.div_dict['input_error'][2]}}"
+                              f"\nSurfer cannot be None or an empty string."
+                              f"\n{self.div_dict['wipe_out_wav'][0]:{self.div_dict['wipe_out_wav'][1]}^{self.div_dict['wipe_out_wav'][2]}}"
+                              f"\nEntered Tour: {self.entered_tour_name}"
+                              f"\nEntered Event: {self.entered_event_name}"
+                              f"\nEntered Round: {self.entered_round}"
+                              f"\nEntered Heat Number: {self.entered_heat_nbr}"
+                              f"\nEntered Surfer: {self.entered_surfer}")
             raise ValueError(no_entry_error)
 
     def add_new_tour(self):
@@ -1167,27 +1183,74 @@ class AddTour:
                   f"\nEntered Heat Number: {self.entered_heat_nbr}")
             return
 
+        # Get entered_event_id
+        query = (select(Event.event_id)
+                 .join(Tour.tour_id == Event.tour_id)
+                 .where(and_(Tour.tour_name == self.entered_tour_name,
+                             Event.event_name == self.entered_event_name
+                             )))
+
+        result = session.execute(query)
+        entered_event_id = result.scalar()
+
+        # Get the entered_round_id
+        query = (select(Round.round_id)
+                 .where(Round.round == self.entered_round))
+        result = session.execute(query)
+        entered_round_id = result.scalar()
+
+        # Create an instance of the HeatDetails class to add to wsl.heatdetails
+        new_heat_details = HeatDetails(heat_nbr=self.entered_heat_nbr,
+                                       event_id=entered_event_id,
+                                       round_id=entered_round_id,
+                                       wind=self.entered_wind,
+                                       heat_date=self.entered_heat_date,
+                                       duration=self.entered_duration,
+                                       wave_min=self.entered_wave_min,
+                                       wave_max=self.entered_wave_max
+                                       )
+
+        session.add(new_heat_details)
+        session.flush()
+        session.commit()
+
     def add_new_surfers_to_heat(self):
         session = Session()
 
-        # Check to see if tour name is entered
-        if self.entered_tour_name is None or self.entered_tour_name == '':
-            print(f"Which tour are you trying to add an event to?")
-            return
+        # was tour, event, round, heat, and surfer entered?
+        self.was_tour_name_entered()
+        self.was_event_name_entered()
+        self.was_round_entered()
+        self.was_heat_nbr_entered()
+        self.was_surfer_entered()
 
+        # Check to see if heat number exists in tour, event, round
+        query = (select(HeatDetails.heat_id)
+                 .join(Round, Round.round_id == HeatDetails.round_id)
+                 .join(Event, Event.event_id == HeatDetails.event_id)
+                 .join(Tour, Tour.tour_id == Event.tour_id)
+                 .where(and_(
+                            Tour.tour_name == self.entered_tour_name,
+                            Event.event_name == self.entered_event_name,
+                            Round.round == self.entered_round,
+                            HeatDetails.heat_nbr == self.entered_heat_nbr
+                            )))
 
-        # Check to see if event name is entered for tour entered
+        result = session.execute(query)
+        entered_heat_id = result.scalar()
 
+        # Get Entered Surfer Id
+        query = (select(Surfers.surfer_id)
+                 .where(Surfers.full_name == self.entered_surfer))
+        result = session.execute(query)
+        entered_surfer_id = result.scalar()
 
-        # Check to see if round is entered
+        new_surfer_in_heat = HeatSurfers(heat_id=entered_heat_id,
+                                         surfer_id=entered_surfer_id)
 
-
-        # Check to see id heat nbr is ented for tour, event, and round
-        # Get Heat id
-
-
-        # Check if surfer first and last name is entered
-        # Get Surfer id
+        session.add(new_surfer_in_heat)
+        session.flush()
+        session.commit()
 
     def add_new_heat_results(self):
         session = Session()

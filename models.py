@@ -754,7 +754,14 @@ class AddSurfer:
                                                 City.city == self.entered_home_city
                                                 )))
             result = session.execute(query)
-            entered_home_city_id = result.scalar()
+            check_home_city = result.scalar()
+
+            if check_home_city is None:
+                city_inst = AddLocation(entered_continent=self.entered_home_continent,
+                                        entered_country=self.entered_home_country,
+                                        entered_region=self.entered_home_region,
+                                        entered_city=self.entered_home_city)
+                city_inst.add_new_city()
 
         # Check to see if the entered_surfer exists
         query = (select(Surfers.surfer_id)
@@ -782,6 +789,20 @@ class AddSurfer:
                             )))
         result = session.execute(query)
         entered_rep_country_id = result.scalar()
+
+        # Get home city id
+        query = (select(City.city_id)
+                 .join(Region, Region.region_id == City.region_id)
+                 .join(Country, Country.country_id == Region.country_id)
+                 .join(Continent, Continent.continent_id == Country.continent_id)
+                 .where(and_(
+                             Continent.continent == self.entered_home_continent,
+                             Country.country == self.entered_home_country,
+                             Region.region == self.entered_home_region,
+                             City.city == self.entered_home_city
+                            )))
+        result = session.execute(query)
+        entered_home_city_id = result.scalar()
 
         # Get full name
         entered_full_name = f"{self.entered_first_name} {self.entered_last_name}"
@@ -1280,23 +1301,23 @@ class AddTour:
 
 # # Enter a New Country
 # inst = AddLocation(entered_continent='North America',
-#                    entered_country='Hawaii')
+#                    entered_country='USA')
 # inst.add_new_country()
-#
-#
+
+
 # # Enter a New Region
-# inst = AddLocation(entered_continent='North America',
-#                    entered_country='Hawaii',
-#                    entered_region='Oahu')
+# inst = AddLocation(entered_continent='South America',
+#                    entered_country='Brazil',
+#                    entered_region='Sao Paulo')
 #
 # inst.add_new_region()
 
 
 # # Enter a New City
-# inst = AddLocation(entered_continent='Oceania',
-#                    entered_country='North Carolina',
-#                    entered_region='Oahu',
-#                    entered_city='North Shore')
+# inst = AddLocation(entered_continent='South America',
+#                    entered_country='Brazil',
+#                    entered_region='Sao Paulo',
+#                    entered_city='Ubatuba')
 #
 # inst.add_new_city()
 
@@ -1317,20 +1338,20 @@ class AddTour:
 
 # # Enter a New Surfer
 # inst = AddSurfer(entered_gender='Male',
-#                  entered_first_name='John John',
-#                  entered_last_name='Florence',
+#                  entered_first_name='Kelly',
+#                  entered_last_name='Slater',
 #                  entered_stance='Regular',
 #                  entered_rep_continent='North America',
-#                  entered_rep_country='Hawaii',
-#                  entered_birthday='1992-10-18',
-#                  entered_height=168,
-#                  entered_weight=79,
-#                  entered_first_season=2008,
-#                  entered_first_tour='Qualifying Series',
+#                  entered_rep_country='USA',
+#                  entered_birthday='1972-02-11',
+#                  entered_height=175,
+#                  entered_weight=73,
+#                  entered_first_season=1989,
+#                  entered_first_tour='Championship Tour',
 #                  entered_home_continent='North America',
-#                  entered_home_country='Hawaii',
-#                  entered_home_region='Oahu',
-#                  entered_home_city='North Shore')
+#                  entered_home_country='USA',
+#                  entered_home_region='Florida',
+#                  entered_home_city='Cocoa Beach')
 # inst.add_new_surfer()
 
 # # Enter a New Tour

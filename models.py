@@ -806,6 +806,7 @@ class AddTour:
                  entered_tour_name: Optional[str] = None,
                  entered_event_name: Optional[str] = None,
                  entered_stop_nbr: Optional[int] = None,
+                 entered_continent: Optional[str] = None,
                  entered_country: Optional[str] = None,
                  entered_region: Optional[str] = None,
                  entered_break_name: Optional[str] = None,
@@ -843,6 +844,7 @@ class AddTour:
         self.entered_tour_name: Optional[str] = entered_tour_name
         self.entered_event_name: Optional[str] = entered_event_name
         self.entered_stop_nbr: Optional[int] = entered_stop_nbr
+        self.entered_continent: Optional[int] = entered_continent
         self.entered_country: Optional[str] = entered_country
         self.entered_region: Optional[str] = entered_region
         self.entered_break_name: Optional[str] = entered_break_name
@@ -874,18 +876,147 @@ class AddTour:
         self.entered_wave_14: Optional[float] = entered_wave_14
         self.entered_wave_15: Optional[float] = entered_wave_15
 
+    div_dict = {'input_error': ['Input Error', '=', 60],
+                'wipe_out_wav': ['Wipe Out', '~', 60]}
+
+    def was_year_entered(self):
+        if self.entered_year is None or self.entered_year == '':
+            no_entry_error = (f"\n"
+                              f"{self.div_dict['input_error'][0]:{self.div_dict['input_error'][1]}^{self.div_dict['input_error'][2]}}"
+                              f"\nYear cannot be None or an empty string."
+                              f"\n{self.div_dict['wipe_out_wav'][0]:{self.div_dict['wipe_out_wav'][1]}^{self.div_dict['wipe_out_wav'][2]}}"
+                              f"\nYou seem a little lost in space-time. What year are you in?"
+                              f"\nEntered Year: {self.entered_year}")
+            raise ValueError(no_entry_error)
+
+    def was_gender_entered(self):
+        if self.entered_gender not in ['Male', 'Female']:
+            no_entry_error = (f"\n"
+                              f"{self.div_dict['input_error'][0]:{self.div_dict['input_error'][1]}^{self.div_dict['input_error'][2]}}"
+                              f"\nThe surfer's gender must be 'Male' or 'Female' because of biology and shit."
+                              f"\n{self.div_dict['wipe_out_wav'][0]:{self.div_dict['wipe_out_wav'][1]}^{self.div_dict['wipe_out_wav'][2]}}"
+                              f"\nEntered Gender: {self.entered_gender}")
+            raise ValueError(no_entry_error)
+
+    def was_tour_type_entered(self):
+        if self.entered_tour_type is None or self.entered_tour_type == '':
+            no_entry_error = (f"\n"
+                              f"{self.div_dict['input_error'][0]:{self.div_dict['input_error'][1]}^{self.div_dict['input_error'][2]}}"
+                              f"\nWhat type of tour is this?"
+                              f"\n{self.div_dict['wipe_out_wav'][0]:{self.div_dict['wipe_out_wav'][1]}^{self.div_dict['wipe_out_wav'][2]}}"
+                              f"\nEntered Year: {self.entered_year}"
+                              f"\nEntered Gender: {self.entered_gender}"
+                              f"\nEntered Tour Type: {self.entered_tour_type}")
+            raise ValueError(no_entry_error)
+
+    def was_tour_name_entered(self):
+        if self.entered_tour_name is None or self.entered_tour_name == '':
+            no_entry_error = (f"\n"
+                              f"{self.div_dict['input_error'][0]:{self.div_dict['input_error'][1]}^{self.div_dict['input_error'][2]}}"
+                              f"\nWhat is the name of this tour?"
+                              f"\n{self.div_dict['wipe_out_wav'][0]:{self.div_dict['wipe_out_wav'][1]}^{self.div_dict['wipe_out_wav'][2]}}"
+                              f"\nEntered Tour Name: {self.entered_tour_name}")
+            raise ValueError(no_entry_error)
+
+    def was_event_name_entered(self):
+        if self.entered_event_name is None or self.entered_event_name == '':
+            no_entry_error = (f"\n"
+                              f"{self.div_dict['input_error'][0]:{self.div_dict['input_error'][1]}^{self.div_dict['input_error'][2]}}"
+                              f"\nWhat is the name of this event?"
+                              f"\n{self.div_dict['wipe_out_wav'][0]:{self.div_dict['wipe_out_wav'][1]}^{self.div_dict['wipe_out_wav'][2]}}"
+                              f"\nEntered Tour Name: {self.entered_tour_name}"
+                              f"\nEntered Event Name: {self.entered_event_name}")
+            raise ValueError(no_entry_error)
+
+    def was_round_entered(self):
+        if self.entered_round is None or self.entered_round == '':
+            no_entry_error = (f"\n"
+                              f"{self.div_dict['input_error'][0]:{self.div_dict['input_error'][1]}^{self.div_dict['input_error'][2]}}"
+                              f"\nWhat round is this?"
+                              f"\n{self.div_dict['wipe_out_wav'][0]:{self.div_dict['wipe_out_wav'][1]}^{self.div_dict['wipe_out_wav'][2]}}"
+                              f"\nEntered Tour Name: {self.entered_tour_name}"
+                              f"\nEntered Event Name: {self.entered_event_name}"
+                              f"\nEntered Round: {self.entered_round}")
+            raise ValueError(no_entry_error)
+
+    def was_heat_nbr_entered(self):
+        if self.entered_heat_nbr is None or self.entered_heat_nbr == '':
+            no_entry_error = (f"\n"
+                              f"{self.div_dict['input_error'][0]:{self.div_dict['input_error'][1]}^{self.div_dict['input_error'][2]}}"
+                              f"\nWhat heat number is this?"
+                              f"\n{self.div_dict['wipe_out_wav'][0]:{self.div_dict['wipe_out_wav'][1]}^{self.div_dict['wipe_out_wav'][2]}}"
+                              f"\nEntered Tour Name: {self.entered_tour_name}"
+                              f"\nEntered Event Name: {self.entered_event_name}"
+                              f"\nEntered Round: {self.entered_round}"
+                              f"\nEntered Heat: {self.entered_heat_nbr}")
+            raise ValueError(no_entry_error)
+
+    def was_continent_entered(self):
+        if self.entered_continent is None or self.entered_continent == '':
+            no_entry_error = (f"\n"
+                              f"{self.div_dict['input_error'][0]:{self.div_dict['input_error'][1]}^{self.div_dict['input_error'][2]}}" 
+                              f"\nContinent cannot be None or an empty string."
+                              f"\n{self.div_dict['wipe_out_wav'][0]:{self.div_dict['wipe_out_wav'][1]}^{self.div_dict['wipe_out_wav'][2]}}"
+                              f"\nYou seem a little lost. What continent are you on?" 
+                              f"\nEntered Continent: {self.entered_continent}")
+            raise ValueError(no_entry_error)
+
+    def was_country_entered(self):
+        session = Session()
+
+        # Check to see if a country was entered
+        if self.entered_country is None or self.entered_country == '':
+            no_entry_error = (f"\n"
+                              f"{self.div_dict['input_error'][0]:{self.div_dict['input_error'][1]}^{self.div_dict['input_error'][2]}}" 
+                              f"\nCountry cannot be None or an empty string."
+                              f"\n{self.div_dict['wipe_out_wav'][0]:{self.div_dict['wipe_out_wav'][1]}^{self.div_dict['wipe_out_wav'][2]}}"
+                              f"\nYou seem a little lost. What country are you in??" 
+                              f"\nEntered Continent: {self.entered_continent}"
+                              f"\nEntered Country: {self.entered_country}")
+            raise ValueError(no_entry_error)
+
+    def was_region_entered(self):
+        session = Session()
+
+        # Check to see if a region was entered
+        if self.entered_region is None or self.entered_region == '':
+            no_entry_error = (f"\n"
+                              f"{self.div_dict['input_error'][0]:{self.div_dict['input_error'][1]}^{self.div_dict['input_error'][2]}}" 
+                              f"\nRegion cannot be None or an empty string."
+                              f"\n{self.div_dict['wipe_out_wav'][0]:{self.div_dict['wipe_out_wav'][1]}^{self.div_dict['wipe_out_wav'][2]}}"
+                              f"\nYou seem a little lost. What region are you in??" 
+                              f"\nEntered Continent: {self.entered_continent}"
+                              f"\nEntered Country: {self.entered_country}"
+                              f"\nEntered Region: {self.entered_region}")
+            raise ValueError(no_entry_error)
+
+    def was_break_name_entered(self):
+        session = Session()
+
+        # Check to see if a break name was entered
+        if self.entered_break_name is None or self.entered_break_name == '':
+            no_entry_error = (f"\n"
+                              f"{self.div_dict['input_error'][0]:{self.div_dict['input_error'][1]}^{self.div_dict['input_error'][2]}}" 
+                              f"\nBreak Name cannot be None or an empty string."
+                              f"\n{self.div_dict['wipe_out_wav'][0]:{self.div_dict['wipe_out_wav'][1]}^{self.div_dict['wipe_out_wav'][2]}}"
+                              f"\nYou seem a little lost. What break are you at?" 
+                              f"\nEntered Continent: {self.entered_continent}"
+                              f"\nEntered Country: {self.entered_country}"
+                              f"\nEntered Region: {self.entered_region}"
+                              f"\nEntered Break Name: {self.entered_break_name}")
+            raise ValueError(no_entry_error)
+
     def add_new_tour(self):
         session = Session()
 
-        # Check that the tour type has been entered
-        if self.entered_tour_type is None or self.entered_tour_type == '':
-            print(f"What type of tour is being added?")
-            return
+        # Was the tour year entered?
+        self.was_year_entered()
 
-        # Check that a year has been entered
-        if self.entered_year is None or self.entered_year == '':
-            print(f"What year did this tour take place?")
-            return
+        # Was the tour gender entered?
+        self.was_gender_entered()
+
+        # Was the tour type entered?
+        self.was_tour_type_entered()
 
         # Check to see if the tour already exists
         query = (select(Tour.tour_id)
@@ -917,33 +1048,15 @@ class AddTour:
     def add_new_event(self):
         session = Session()
 
-        # Check that the tour name has been entered
-        if self.entered_tour_name is None or self.entered_tour_name == '':
-            print(f"Which tour are you trying to add an event to?")
-            return
+        # Was the tour and event entered?
+        self.was_tour_name_entered()
+        self.was_event_name_entered()
 
-        # Check that the event name has been added
-        if self.entered_event_name is None or self.entered_event_name == '':
-            print(f"What is the name of the event you are adding?")
-            return
-
-        # Check that the stop number has been added
-        if self.entered_stop_nbr is None:
-            print(f"What stop number is this event? You entered: {self.entered_stop_nbr}")
-            return
-
-        # Check that the Country, Region, and Break were added
-        if self.entered_country is None or self.entered_country == '':
-            print(f"What country was this even in?")
-            return
-
-        if self.entered_region is None or self.entered_region == '':
-            print(f"What region of {self.entered_country} was this event in?")
-            return
-
-        if self.entered_break_name is None or self.entered_break_name == '':
-            print(f"What is the name of the break?")
-            return
+        # Was the break location entered?
+        self.was_continent_entered()
+        self.was_country_entered()
+        self.was_region_entered()
+        self.was_break_name_entered()
 
         # Check to see if the entered_event exists in the entered_tour
         query = (select(Event.event_name)
@@ -959,8 +1072,9 @@ class AddTour:
 
         # Does the entered_event exist in the entered_tour
         if check_event is not None:
-            print(f"The event {self.entered_event_name} "
-                  f"in the {self.entered_tour_name} has already been added.")
+            print(f"The Event has already been entered."
+                  f"\nTour Name: {self.entered_tour_name} "
+                  f"\nEvent Name: {self.entered_event_name}")
             return
 
         # Get tour_id from tour table
@@ -973,10 +1087,12 @@ class AddTour:
         query = (select(Break.break_id)
                  .join(Region, Break.region_id == Region.region_id)
                  .join(Country, Region.country_id == Country.country_id)
+                 .join(Continent, Continent.continent_id == Country.continent_id)
                  .where(and_(
                              Break.break_name == self.entered_break_name,
                              Region.region == self.entered_region,
-                             Country.country == self.entered_country
+                             Country.country == self.entered_country,
+                             Continent.continent == self.entered_continent
                             )))
         result = session.execute(query)
         entered_break_id = result.scalar()
@@ -996,8 +1112,19 @@ class AddTour:
         session = Session()
 
         # Check that text is entered for round
-        if self.entered_round is None or self.entered_round == '':
-            print(f"What is the name of the round you are creating?")
+        self.was_round_entered()
+
+        # Check to see if the round name already exists
+        query = (select(Round.round)
+                 .where(Round.round == self.entered_round))
+
+        result = session.execute(query)
+        check_round = result.scalar()
+
+        # Does the entered_event exist in the entered_tour
+        if check_round is not None:
+            print(f"The Round Type has already been entered."
+                  f"\nEntered Round Type: {self.entered_round}")
             return
 
         # Create an instance of the Round class to add to wsl.round
@@ -1010,41 +1137,35 @@ class AddTour:
     def add_new_heat_details(self):
         session = Session()
 
-        # Check to see if tour name is entered
-        if self.entered_tour_name is None or self.entered_tour_name == '':
-            print(f"Which tour are you trying to add an event to?")
+        # Was tour, event, round, and heat entered?
+        self.was_tour_name_entered()
+        self.was_event_name_entered()
+        self.was_round_entered()
+        self.was_heat_nbr_entered()
+
+        # Does the heat already exist in the round, event, and tour?
+        query = (select(HeatDetails.heat_id)
+                 .join(Round, Round.round_id == HeatDetails.round_id)
+                 .join(Event, Event.event_id == HeatDetails.event_id)
+                 .join(Tour, Tour.tour_id == Event.tour_id)
+                 .where(and_(
+                             Tour.tour_name == self.entered_tour_name,
+                             Event.event_name == self.entered_event_name,
+                             Round.round == self.entered_round,
+                             HeatDetails.heat_nbr == self.entered_heat_nbr
+                            )))
+
+        result = session.execute(query)
+        check_heat_nbr = result.scalar()
+
+        # Does the entered heat number already exist for the round, event, and tour
+        if check_heat_nbr is not None:
+            print(f"The entered heat number already exists."
+                  f"\nEntered Tour: {self.entered_tour_name}"
+                  f"\nEntered Event: {self.entered_event_name}"
+                  f"\nEntered Round: {self.entered_round}"
+                  f"\nEntered Heat Number: {self.entered_heat_nbr}")
             return
-
-
-        # Check to see if event name is entered
-        if self.entered_event_name is None or self.entered_event_name == '':
-            print(f"What is the name of the event you are adding?")
-            return
-        else:
-            # If it is entered see if it exists for the tour entered
-            query = (select(Event.event_name)
-                .join(Tour, Tour.tour_id == Tour.tour_id)
-                .where(
-                and_(
-                    Tour.tour_name == self.entered_tour_name,
-                    Event.stop_nbr == self.entered_stop_nbr
-                )))
-
-            result = session.execute(query)
-            check_event = result.scalar()
-
-            # Does the entered_event exist in the entered_tour
-            if check_event is not None:
-                print(f"The event {self.entered_event_name} "
-                      f"in the {self.entered_tour_name} has already been added.")
-                return
-
-
-        # Check to see if round is entered
-        # Get Round id
-
-
-        # Check to see if heat nbr is entered for tour, event, round above
 
     def add_new_surfers_to_heat(self):
         session = Session()
@@ -1131,23 +1252,23 @@ class AddTour:
 #
 # inst.add_new_break()
 
-# Enter a New Surfer
-inst = AddSurfer(entered_gender='Male',
-                 entered_first_name='John John',
-                 entered_last_name='Florence',
-                 entered_stance='Regular',
-                 entered_rep_continent='North America',
-                 entered_rep_country='Hawaii',
-                 entered_birthday='1992-10-18',
-                 entered_height=168,
-                 entered_weight=79,
-                 entered_first_season=2008,
-                 entered_first_tour='Qualifying Series',
-                 entered_home_continent='North America',
-                 entered_home_country='Hawaii',
-                 entered_home_region='Oahu',
-                 entered_home_city='North Shore')
-inst.add_new_surfer()
+# # Enter a New Surfer
+# inst = AddSurfer(entered_gender='Male',
+#                  entered_first_name='John John',
+#                  entered_last_name='Florence',
+#                  entered_stance='Regular',
+#                  entered_rep_continent='North America',
+#                  entered_rep_country='Hawaii',
+#                  entered_birthday='1992-10-18',
+#                  entered_height=168,
+#                  entered_weight=79,
+#                  entered_first_season=2008,
+#                  entered_first_tour='Qualifying Series',
+#                  entered_home_continent='North America',
+#                  entered_home_country='Hawaii',
+#                  entered_home_region='Oahu',
+#                  entered_home_city='North Shore')
+# inst.add_new_surfer()
 
 # # Enter a New Tour
 # inst = AddTour(entered_year=2022,

@@ -10,6 +10,8 @@ from sqlalchemy import create_engine, select, ForeignKey
 from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
+from error_handling import ErrorMsgFormat
+
 ########################################################################################################################
 # 2 - Connection to mysql and create base
 
@@ -628,84 +630,129 @@ class AddSurfer:
                  entered_first_name: str = None,
                  entered_last_name: str = None,
                  entered_stance: Optional[str] = None,
+                 entered_rep_continent: Optional[str] = None,
                  entered_rep_country: str = None,
                  entered_birthday: Optional = None,
                  entered_height: Optional[int] = None,
                  entered_weight: Optional[int] = None,
                  entered_first_season: Optional[int] = None,
                  entered_first_tour: Optional[str] = None,
+                 entered_home_continent: Optional[str] = None,
                  entered_home_country: Optional[str] = None,
                  entered_home_region: Optional[str] = None,
-                 entered_home_city: Optional[str] = None
+                 entered_home_city: Optional[str] = None,
+                 entered_home_city_id: Optional[str] = None
                  ):
 
         self.entered_gender: str = entered_gender
         self.entered_first_name: str = entered_first_name
         self.entered_last_name: str = entered_last_name
         self.entered_stance: Optional[str] = entered_stance
+        self.entered_rep_continent: Optional[str] = entered_rep_continent
         self.entered_rep_country: str = entered_rep_country
         self.entered_birthday: Optional = entered_birthday
         self.entered_height: Optional[int] = entered_height
         self.entered_weight: Optional[int] = entered_weight
         self.entered_first_season: Optional[int] = entered_first_season
         self.entered_first_tour: Optional[str] = entered_first_tour
+        self.entered_home_continent: Optional[str] = entered_home_continent
         self.entered_home_country: Optional[str] = entered_home_country
         self.entered_home_region: Optional[str] = entered_home_region
         self.entered_home_city: Optional[str] = entered_home_city
+        self.entered_home_city_id: Optional[str] = entered_home_city_id
+
+    div_dict = {'input_error': ['Input Error', '=', 60],
+                'wipe_out_wav': ['Wipe Out', '~', 60]}
 
     def was_gender_entered(self):
-        if self.entered_gender is None or self.entered_gender == '':
+        if self.entered_gender not in ['Male', 'Female']:
             no_entry_error = (f"\n"
                               f"{self.div_dict['input_error'][0]:{self.div_dict['input_error'][1]}^{self.div_dict['input_error'][2]}}"
-                              f"\nContinent cannot be None or an empty string."
+                              f"\nThe surfer's gender must be 'Male' or 'Female' because of biology and shit."
                               f"\n{self.div_dict['wipe_out_wav'][0]:{self.div_dict['wipe_out_wav'][1]}^{self.div_dict['wipe_out_wav'][2]}}"
-                              f"\nYou seem a little lost. What continent are you on?"
-                              f"\nEntered Continent: {self.entered_continent}")
+                              f"\nEntered Gender: {self.entered_gender}")
             raise ValueError(no_entry_error)
 
     def was_first_name_entered(self):
-        pass
+        if self.entered_first_name is None or self.entered_first_name == '':
+            no_entry_error = (f"\n"
+                              f"{self.div_dict['input_error'][0]:{self.div_dict['input_error'][1]}^{self.div_dict['input_error'][2]}}"
+                              f"\nFirst Name cannot be None or an empty string."
+                              f"\n{self.div_dict['wipe_out_wav'][0]:{self.div_dict['wipe_out_wav'][1]}^{self.div_dict['wipe_out_wav'][2]}}"
+                              f"\nEntered First Name: {self.entered_first_name}"
+                              f"\nEntered Last Name: {self.entered_last_name}")
+            raise ValueError(no_entry_error)
 
     def was_last_name_entered(self):
-        pass
+        if self.entered_last_name is None or self.entered_last_name == '':
+            no_entry_error = (f"\n"
+                              f"{self.div_dict['input_error'][0]:{self.div_dict['input_error'][1]}^{self.div_dict['input_error'][2]}}"
+                              f"\nLast Name cannot be None or an empty string."
+                              f"\n{self.div_dict['wipe_out_wav'][0]:{self.div_dict['wipe_out_wav'][1]}^{self.div_dict['wipe_out_wav'][2]}}"
+                              f"\nEntered First Name: {self.entered_first_name}"
+                              f"\nEntered Last Name: {self.entered_last_name}")
+            raise ValueError(no_entry_error)
+
+    def was_rep_continent_entered(self):
+
+        # Was a rep continent entered?
+        if self.entered_rep_continent is None or self.entered_rep_continent == '':
+            no_entry_error = (f"\n"
+                              f"{self.div_dict['input_error'][0]:{self.div_dict['input_error'][1]}^{self.div_dict['input_error'][2]}}"
+                              f"\nRepresentative Continent cannot be None or an empty string."
+                              f"\n{self.div_dict['wipe_out_wav'][0]:{self.div_dict['wipe_out_wav'][1]}^{self.div_dict['wipe_out_wav'][2]}}"
+                              f"\nYou seem a little lost. What continent are you on?"
+                              f"\nEntered Rep Continent: {self.entered_rep_continent}"
+                              f"\nEntered Rep Country: {self.entered_rep_country}")
+            raise ValueError(no_entry_error)
 
     def was_rep_country_entered(self):
-        pass
+
+        # Was a rep country entered?
+        if self.entered_rep_country is None or self.entered_rep_country == '':
+            no_entry_error = (f"\n"
+                              f"{self.div_dict['input_error'][0]:{self.div_dict['input_error'][1]}^{self.div_dict['input_error'][2]}}"
+                              f"\nRepresentative Country cannot be None or an empty string."
+                              f"\n{self.div_dict['wipe_out_wav'][0]:{self.div_dict['wipe_out_wav'][1]}^{self.div_dict['wipe_out_wav'][2]}}"
+                              f"\nYou seem a little lost. What country are you in??"
+                              f"\nEntered Rep Continent: {self.entered_rep_continent}"
+                              f"\nEntered Rep Country: {self.entered_rep_country}")
+            raise ValueError(no_entry_error)
 
     def add_new_surfer(self):
         session = Session()
 
-        # Was gender entered?
+        # Was gender, first name, and last name entered?
         self.was_gender_entered()
-
-        # Was a first name entered?
         self.was_first_name_entered()
-
-        # Was a last name entered?
         self.was_last_name_entered()
 
-        # Was a representative country entered?
+        # Was a representative continent and country entered?
+        self.was_rep_continent_entered()
         self.was_rep_country_entered()
 
-        # Check that a rep country is entered
-        if self.entered_rep_country is None or self.entered_rep_country == '':
-            print(f"What country is the surfer representing?")
-            return
+        # If a home city is entered make sure region, country, and continent was entered too
+        if self.entered_home_city is not None or self.entered_home_city != '':
+            home_city = True
+            was_home_loc_entered = AddLocation(entered_continent=self.entered_home_continent,
+                                               entered_country=self.entered_home_country,
+                                               entered_region=self.entered_home_region,
+                                               entered_city=self.entered_home_city)
+            was_home_loc_entered.was_continent_entered()
 
-        # If a home city is entered check that a home region is entered
-        city_is_entered = self.entered_home_city is not None
-        region_is_none = self.entered_home_region is None
-        region_is_empty = self.entered_home_region == ''
-        if city_is_entered and (region_is_none or region_is_empty):
-            print(f"What region is the surfer's home town in?")
-            return
-
-        # If a home city is entered check that a home country is entered
-        country_is_none = self.entered_home_country is None
-        country_is_empty = self.entered_home_country == ''
-        if city_is_entered and (country_is_none or country_is_empty):
-            print(f"What country is the surfer's home town in?")
-            return
+            # If location data was entered get home city id
+            query = (select(City.city_id)
+                                    .join(Region, Region.region_id == City.region_id)
+                                    .join(Country, Country.country_id == Region.country_id)
+                                    .join(Continent, Continent.continent_id == Country.continent_id)
+                                    .where(and_(
+                                                Continent.continent == self.entered_home_continent,
+                                                Country.country == self.entered_home_country,
+                                                Region.region == self.entered_home_region,
+                                                City.city == self.entered_home_city
+                                                )))
+            result = session.execute(query)
+            entered_home_city_id = result.scalar()
 
         # Check to see if the entered_surfer exists
         query = (select(Surfers.surfer_id)
@@ -724,26 +771,15 @@ class AddSurfer:
                   f"of {self.entered_rep_country} has already been added.")
             return
 
-        # Get country_id from the country table
+        # Get country_id from the country table for rep  country
         query = (select(Country.country_id)
-                 .where(Country.country == self.entered_rep_country))
+                 .join(Continent, Continent.continent_id == Country.continent_id)
+                 .where(and_(
+                            Continent.continent == self.entered_rep_continent,
+                            Country.country == self.entered_rep_country
+                            )))
         result = session.execute(query)
         entered_rep_country_id = result.scalar()
-
-        # Get city_id from the city table
-        if self.entered_home_city is None or self.entered_home_city == '':
-            entered_city_id = None
-        else:
-            query = (select(City.city_id)
-                     .join(Region, Region.region_id == City.region_id)
-                     .join(Country, Country.country_id == Region.country_id)
-                     .where(and_(
-                                 City.city == self.entered_home_city,
-                                 Region.region == self.entered_home_region,
-                                 Country.country == self.entered_home_country
-                                )))
-            result = session.execute(query)
-            entered_city_id = result.scalar()
 
         new_surfer = Surfers(gender=self.entered_gender,
                              first_name=self.entered_first_name,
@@ -755,7 +791,7 @@ class AddSurfer:
                              weight=self.entered_weight,
                              first_season=self.entered_first_season,
                              first_tour=self.entered_first_tour,
-                             home_city_id=entered_city_id)
+                             home_city_id=entered_home_city_id)
 
         session.add(new_surfer)
         session.flush()
@@ -1095,21 +1131,23 @@ class AddTour:
 #
 # inst.add_new_break()
 
-# # Enter a New Surfer
-# inst = AddSurfer(entered_gender='Male',
-#                  entered_first_name='John John',
-#                  entered_last_name='Florence',
-#                  entered_stance='Regular',
-#                  entered_rep_country='Hawaii',
-#                  entered_birthday='1992-10-18',
-#                  entered_height=168,
-#                  entered_weight=79,
-#                  entered_first_season=2008,
-#                  entered_first_tour='Qualifying Series',
-#                  entered_home_country='Hawaii',
-#                  entered_home_region='Oahu',
-#                  entered_home_city='North Shore')
-# inst.add_new_surfer()
+# Enter a New Surfer
+inst = AddSurfer(entered_gender='Male',
+                 entered_first_name='John John',
+                 entered_last_name='Florence',
+                 entered_stance='Regular',
+                 entered_rep_continent='North America',
+                 entered_rep_country='Hawaii',
+                 entered_birthday='1992-10-18',
+                 entered_height=168,
+                 entered_weight=79,
+                 entered_first_season=2008,
+                 entered_first_tour='Qualifying Series',
+                 entered_home_continent='North America',
+                 entered_home_country='Hawaii',
+                 entered_home_region='Oahu',
+                 entered_home_city='North Shore')
+inst.add_new_surfer()
 
 # # Enter a New Tour
 # inst = AddTour(entered_year=2022,

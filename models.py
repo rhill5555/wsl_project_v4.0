@@ -667,10 +667,10 @@ class AddSurfer:
                 'wipe_out_wav': ['Wipe Out', '~', 60]}
 
     def was_gender_entered(self):
-        if self.entered_gender not in ['Male', 'Female']:
+        if self.entered_gender not in ['Men', 'Women']:
             no_entry_error = (f"\n"
                               f"{self.div_dict['input_error'][0]:{self.div_dict['input_error'][1]}^{self.div_dict['input_error'][2]}}"
-                              f"\nThe surfer's gender must be 'Male' or 'Female' because of biology and shit."
+                              f"\nThe surfer's gender must be 'Men' or 'Women' because of biology and shit."
                               f"\n{self.div_dict['wipe_out_wav'][0]:{self.div_dict['wipe_out_wav'][1]}^{self.div_dict['wipe_out_wav'][2]}}"
                               f"\nEntered Gender: {self.entered_gender}")
             raise ValueError(no_entry_error)
@@ -919,10 +919,10 @@ class AddTour:
             raise ValueError(no_entry_error)
 
     def was_gender_entered(self):
-        if self.entered_gender not in ['Male', 'Female']:
+        if self.entered_gender not in ['Men', 'Women']:
             no_entry_error = (f"\n"
                               f"{self.div_dict['input_error'][0]:{self.div_dict['input_error'][1]}^{self.div_dict['input_error'][2]}}"
-                              f"\nThe surfer's gender must be 'Male' or 'Female' because of biology and shit."
+                              f"\nThe surfer's gender must be 'Men' or 'Women' because of biology and shit."
                               f"\n{self.div_dict['wipe_out_wav'][0]:{self.div_dict['wipe_out_wav'][1]}^{self.div_dict['wipe_out_wav'][2]}}"
                               f"\nEntered Gender: {self.entered_gender}")
             raise ValueError(no_entry_error)
@@ -1337,7 +1337,7 @@ class AddTour:
 # inst.add_new_break()
 
 # # Enter a New Surfer
-# inst = AddSurfer(entered_gender='Male',
+# inst = AddSurfer(entered_gender='Men',
 #                  entered_first_name='Kelly',
 #                  entered_last_name='Slater',
 #                  entered_stance='Regular',
@@ -1360,13 +1360,14 @@ class AddTour:
 #                entered_tour_type='Championship Tour')
 # inst.add_new_tour()
 
-# # Enter a New Event
-# inst = AddTour(entered_tour_name='2022 Mens Championship Tour',
-#                entered_event_name='Billabong Prop Pipeline',
-#                entered_stop_nbr=1,
-#                entered_country='Hawaii',
-#                entered_region='Oahu',
-#                entered_break_name='Pipeline',
-#                entered_open_date='2022-01-29',
-#                entered_close_date='2022-02-10')
-# inst.add_new_event()
+# Enter a New Event
+inst = AddTour(entered_tour_name='2022 Mens Championship Tour',
+               entered_event_name='Billabong Prop Pipeline',
+               entered_stop_nbr=1,
+               entered_continent='North America',
+               entered_country='Hawaii',
+               entered_region='Oahu',
+               entered_break_name='Pipeline',
+               entered_open_date='2022-01-29',
+               entered_close_date='2022-02-10')
+inst.add_new_event()

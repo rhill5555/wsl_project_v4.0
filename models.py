@@ -1174,6 +1174,9 @@ class AddTour:
     def add_new_heat_details(self):
         session = Session()
 
+        div_dict = {'input_error': ['Input Error', '=', 60],
+                    'wipe_out_wav': ['Wipe Out', '~', 60]}
+
         # Was tour, event, round, and heat entered?
         self.was_tour_name_entered()
         self.was_event_name_entered()
@@ -1206,7 +1209,7 @@ class AddTour:
 
         # Get entered_event_id
         query = (select(Event.event_id)
-                 .join(Tour.tour_id == Event.tour_id)
+                 .join(Tour, Tour.tour_id == Event.tour_id)
                  .where(and_(Tour.tour_name == self.entered_tour_name,
                              Event.event_name == self.entered_event_name
                              )))
@@ -1260,11 +1263,19 @@ class AddTour:
         result = session.execute(query)
         entered_heat_id = result.scalar()
 
-        # Get Entered Surfer Id
+        # Does surfer already exist?
         query = (select(Surfers.surfer_id)
                  .where(Surfers.full_name == self.entered_surfer))
         result = session.execute(query)
         entered_surfer_id = result.scalar()
+
+        if entered_surfer_id is None:
+            no_entry_error = (f"\n"
+                              f"{self.div_dict['input_error'][0]:{self.div_dict['input_error'][1]}^{self.div_dict['input_error'][2]}}"
+                              f"\nWe have not met that surfer yet. Add them to the database."
+                              f"\n{self.div_dict['wipe_out_wav'][0]:{self.div_dict['wipe_out_wav'][1]}^{self.div_dict['wipe_out_wav'][2]}}"
+                              f"\nEntered Surfer: {self.entered_surfer}")
+            raise ValueError(no_entry_error)
 
         new_surfer_in_heat = HeatSurfers(heat_id=entered_heat_id,
                                          surfer_id=entered_surfer_id)
@@ -1360,14 +1371,39 @@ class AddTour:
 #                entered_tour_type='Championship Tour')
 # inst.add_new_tour()
 
-# Enter a New Event
+# # Enter a New Event
+# inst = AddTour(entered_tour_name='2022 Mens Championship Tour',
+#                entered_event_name='Billabong Prop Pipeline',
+#                entered_stop_nbr=1,
+#                entered_continent='North America',
+#                entered_country='Hawaii',
+#                entered_region='Oahu',
+#                entered_break_name='Pipeline',
+#                entered_open_date='2022-01-29',
+#                entered_close_date='2022-02-10')
+# inst.add_new_event()
+
+# # Enter a new round type
+# inst = AddTour(entered_round='Opening Round')
+# inst.add_new_round()
+
+# # Enter details for a new heat
+# inst = AddTour(entered_heat_nbr='1',
+#                entered_tour_name='2022 Mens Championship Tour',
+#                entered_event_name='Billabong Prop Pipeline',
+#                entered_round='Opening Round',
+#                entered_wind='Calm',
+#                entered_heat_date='2022-01-29',
+#                entered_duration=30,
+#                entered_wave_min=4,
+#                entered_wave_max=6)
+# inst.add_new_heat_details()
+
+# Add new surfer to a heat
 inst = AddTour(entered_tour_name='2022 Mens Championship Tour',
                entered_event_name='Billabong Prop Pipeline',
-               entered_stop_nbr=1,
-               entered_continent='North America',
-               entered_country='Hawaii',
-               entered_region='Oahu',
-               entered_break_name='Pipeline',
-               entered_open_date='2022-01-29',
-               entered_close_date='2022-02-10')
-inst.add_new_event()
+               entered_round='Opening Round',
+               entered_heat_nbr='1',
+               entered_surfer='Owen Wright'
+               )
+inst.add_new_surfers_to_heat()

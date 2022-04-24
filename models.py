@@ -1292,6 +1292,7 @@ class AddTour:
                   f"\nEntered Surfer: {self.entered_surfer}")
             return
 
+
         new_surfer_in_heat = HeatSurfers(heat_id=entered_heat_id,
                                          surfer_id=entered_surfer_id)
 
@@ -1309,13 +1310,13 @@ class AddTour:
         self.was_heat_nbr_entered()
         self.was_surfer_entered()
 
-        # Check to see if heat number and surfer exists in tour, event, round
+        # Is the entered surfer in the entered heat?
         query = (select(HeatSurfers.surfer_heat_id)
+                 .join(HeatDetails, HeatDetails.heat_id == HeatSurfers.heat_id)
                  .join(Round, Round.round_id == HeatDetails.round_id)
                  .join(Event, Event.event_id == HeatDetails.event_id)
                  .join(Tour, Tour.tour_id == Event.tour_id)
-                 .join(HeatDetails, HeatDetails.heat_id == HeatSurfers.heat_id)
-                 .join(Surfers, Surfers.surfer_id == HeatSurfers.heat_id)
+                 .join(Surfers, Surfers.surfer_id == HeatSurfers.surfer_id)
                  .where(and_(
                             Tour.tour_name == self.entered_tour_name,
                             Event.event_name == self.entered_event_name,
@@ -1325,7 +1326,115 @@ class AddTour:
                             )))
 
         result = session.execute(query)
-        entered_heat_surfer_id = result.scalar()
+        check_surfer_in_heat = result.scalar()
+
+        # Does the entered surfer and heat already exist for the round, event, and tour
+        if check_surfer_in_heat is None:
+            no_entry_error = (f"\n"
+                              f"{self.div_dict['input_error'][0]:{self.div_dict['input_error'][1]}^{self.div_dict['input_error'][2]}}"
+                              f"\nThe surfer has not been entered into the heat."
+                              f"\n{self.div_dict['wipe_out_wav'][0]:{self.div_dict['wipe_out_wav'][1]}^{self.div_dict['wipe_out_wav'][2]}}"
+                              f"\nEntered Tour Name: {self.entered_tour_name}"
+                              f"\nEntered Event Name: {self.entered_event_name}"
+                              f"\nEntered Round: {self.entered_round}"
+                              f"\nEntered Heat: {self.entered_heat_nbr}"
+                              f"\nEntered Surfer: {self.entered_surfer}")
+            raise ValueError(no_entry_error)
+        else:
+            print(f"The entered surfer already exists in the entered heat."
+                  f"\nEntered Tour: {self.entered_tour_name}"
+                  f"\nEntered Event: {self.entered_event_name}"
+                  f"\nEntered Round: {self.entered_round}"
+                  f"\nEntered Heat Number: {self.entered_heat_nbr}"
+                  f"\nEntered Surfer: {self.entered_surfer}")
+
+        # Has the surfer results already been entered?
+        query = (select(HeatResults.surfer_in_heat_id)
+                 .join(HeatSurfers, HeatSurfers.surfer_heat_id == HeatResults.surfer_in_heat_id)
+                 .join(HeatDetails, HeatDetails.heat_id == HeatSurfers.heat_id)
+                 .join(Round, Round.round_id == HeatDetails.round_id)
+                 .join(Event, Event.event_id == HeatDetails.event_id)
+                 .join(Tour, Tour.tour_id == Event.tour_id)
+                 .join(Surfers, Surfers.surfer_id == HeatSurfers.surfer_id)
+                 .where(and_(
+                            Tour.tour_name == self.entered_tour_name,
+                            Event.event_name == self.entered_event_name,
+                            Round.round == self.entered_round,
+                            HeatDetails.heat_nbr == self.entered_heat_nbr,
+                            Surfers.full_name == self.entered_surfer
+                            )))
+
+        result = session.execute(query)
+        check_surfer_in_results = result.scalar()
+
+        # Does the entered heat number already exist for the round, event, and tour
+        if check_surfer_in_results is not None:
+            print(f"Results for the entered surfer has already been entered into the heat.."
+                  f"\nEntered Tour: {self.entered_tour_name}"
+                  f"\nEntered Event: {self.entered_event_name}"
+                  f"\nEntered Round: {self.entered_round}"
+                  f"\nEntered Heat Number: {self.entered_heat_nbr}"
+                  f"\nEntered Surfer: {self.entered_surfer}")
+            return
+
+        # Get the heat id
+        query = (select(HeatDetails.heat_id)
+                 .join(Round, Round.round_id == HeatDetails.round_id)
+                 .join(Event, Event.event_id == HeatDetails.event_id)
+                 .join(Tour, Tour.tour_id == Event.tour_id)
+                 .where(and_(
+                            Tour.tour_name == self.entered_tour_name,
+                            Event.event_name == self.entered_event_name,
+                            Round.round == self.entered_round,
+                            HeatDetails.heat_nbr == self.entered_heat_nbr
+                            )))
+
+        result = session.execute(query)
+        entered_heat_id = result.scalar()
+
+        # Get the surfer in heat id
+        query = (select(HeatSurfers.surfer_heat_id)
+                 .join(Surfers, Surfers.surfer_id == HeatSurfers.surfer_id)
+                 .join(HeatDetails, HeatDetails.heat_id == HeatSurfers.heat_id)
+                 .join(Round, Round.round_id == HeatDetails.round_id)
+                 .join(Event, Event.event_id == HeatDetails.event_id)
+                 .join(Tour, Tour.tour_id == Event.tour_id)
+                 .where(and_(
+                            Tour.tour_name == self.entered_tour_name,
+                            Event.event_name == self.entered_event_name,
+                            Round.round == self.entered_round,
+                            HeatDetails.heat_nbr == self.entered_heat_nbr,
+                            Surfers.full_name == self.entered_surfer
+                            )))
+
+        result = session.execute(query)
+        entered_surfer_in_heat_id = result.scalar()
+
+        new_heat_results = HeatResults(heat_id=entered_heat_id,
+                                       surfer_in_heat_id=entered_surfer_in_heat_id,
+                                       pick_to_win_percent=self.entered_pick_to_win_percent,
+                                       jersey_color=self.entered_jersey_color,
+                                       status=self.entered_status,
+                                       wave_1=self.entered_wave_1,
+                                       wave_2=self.entered_wave_2,
+                                       wave_3=self.entered_wave_3,
+                                       wave_4=self.entered_wave_4,
+                                       wave_5=self.entered_wave_5,
+                                       wave_6=self.entered_wave_6,
+                                       wave_7=self.entered_wave_7,
+                                       wave_8=self.entered_wave_8,
+                                       wave_9=self.entered_wave_9,
+                                       wave_10=self.entered_wave_10,
+                                       wave_11=self.entered_wave_11,
+                                       wave_12=self.entered_wave_12,
+                                       wave_13=self.entered_wave_13,
+                                       wave_14=self.entered_wave_14,
+                                       wave_15=self.entered_wave_15
+                                       )
+
+        session.add(new_heat_results)
+        session.flush()
+        session.commit()
 
 
 ########################################################################################################################
@@ -1426,6 +1535,22 @@ class AddTour:
 #                entered_event_name='Billabong Prop Pipeline',
 #                entered_round='Opening Round',
 #                entered_heat_nbr='1',
-#                entered_surfer='Owen Wright'
+#                entered_surfer='Ezekiel Lau'
 #                )
 # inst.add_new_surfers_to_heat()
+
+# # Add New Heat Results
+# inst = AddTour(entered_tour_name='2022 Mens Championship Tour',
+#                entered_event_name='Billabong Prop Pipeline',
+#                entered_round='Opening Round',
+#                entered_heat_nbr='1',
+#                entered_surfer='Ezekiel Lau',
+#                entered_pick_to_win_percent=31,
+#                entered_jersey_color='Black',
+#                entered_status='Advanced',
+#                entered_wave_1=4.50,
+#                entered_wave_2=1.00,
+#                entered_wave_3=0.73,
+#                entered_wave_4=2.50
+#                )
+# inst.add_new_heat_results()

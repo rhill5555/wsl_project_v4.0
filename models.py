@@ -10,7 +10,6 @@ from sqlalchemy import create_engine, select, ForeignKey
 from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
-from error_handling import ErrorMsgFormat
 
 ########################################################################################################################
 # 2 - Connection to mysql and create base

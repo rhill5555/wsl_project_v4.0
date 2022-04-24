@@ -41,6 +41,8 @@ class Continent(Base):
         return f"Continent(id={self.continent_id!r}, " \
                f"name={self.continent!r})"
 
+    # For direct querying
+    session = Session()
 
 # wsl.country
 class Country(Base):
@@ -1436,8 +1438,48 @@ class AddTour:
         session.commit()
 
 
+#######################################################################################################################
+# # 6.0 - Return lists
+class LocationLists:
+    def __init__(self,
+                 entered_continent: Optional[str] = None,
+                 entered_country: Optional[str] = None,
+                 entered_region: Optional[str] = None,
+                 ):
+
+        self.entered_continent: Optional[str] = entered_continent
+        self.entered_country: Optional[str] = entered_country
+        self.entered_region: Optional[str] = entered_region
+
+    @staticmethod
+    def return_continents():
+        session = Session()
+
+        query = session.query(Continent.continent) \
+                       .order_by(Continent.continent) \
+                       .all()
+
+        continent_list = []
+        for continent in query:
+            continent_list.append(continent[0])
+
+        return continent_list
+
+    def return_countries_from_continents(self):
+        session = Session()
+
+        query = session.query(Country.country)\
+                       .join(Continent)\
+                       .filter(Continent.continent == {self.entered_continent})
+
+        country_list = []
+        for country in query:
+            country_list.append(country[0])
+
+        return country_list
+
 ########################################################################################################################
-# 5.0 - Testing
+# 6.0 - Testing
 
 
 # # Enter a New Country
@@ -1553,3 +1595,5 @@ class AddTour:
 #                entered_wave_4=2.50
 #                )
 # inst.add_new_heat_results()
+
+

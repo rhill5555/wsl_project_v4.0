@@ -1042,6 +1042,7 @@ class Ui_Form(object):
         self.cb_addbreak_country.setStyleSheet("background-color: rgb(251, 248, 241);\n"
 "font: 75 10pt \"Verdana\";")
         self.cb_addbreak_country.setObjectName("cb_addbreak_country")
+        self.cb_addbreak_country.addItem("")
         self.flayout_addbreak_location.setWidget(1, QtWidgets.QFormLayout.FieldRole, self.cb_addbreak_country)
         self.label_addbreak_region = QtWidgets.QLabel(self.formLayoutWidget)
         self.label_addbreak_region.setStyleSheet("background-color: rgb(254, 131, 198);\n"
@@ -1528,7 +1529,7 @@ class Ui_Form(object):
 
         self.retranslateUi(Form)
         self.tab_top_lvl.setCurrentIndex(3)
-        self.tab_second_lvl.setCurrentIndex(4)
+        self.tab_second_lvl.setCurrentIndex(3)
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
@@ -1617,6 +1618,7 @@ class Ui_Form(object):
         self.pb_addbreak_newloc.setText(_translate("Form", "New Location"))
         self.label_addbreak_continent.setText(_translate("Form", "Continent:"))
         self.label_addbreak_country.setText(_translate("Form", "Country:"))
+        self.cb_addbreak_country.setItemText(0, _translate("Form", "test"))
         self.label_addbreak_region.setText(_translate("Form", "Region:"))
         self.label_addbreak_break.setText(_translate("Form", "Break:"))
         self.label_addbreak_location_source.setText(_translate("Form", "Location hierarchies come from surf-forecast.com"))

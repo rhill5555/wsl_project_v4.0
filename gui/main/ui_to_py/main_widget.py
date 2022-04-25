@@ -133,7 +133,20 @@ class MainWidget(QMainWindow, Ui_Form):
         if dialog.exec() == QDialog.Accepted:
             continent = dialog.cb_continent.currentText()
 
+        entered_continent = dialog.cb_continent.currentText()
 
+        # If country was entered into line edit use that value.
+        # Otherwise no new country is required.
+        country_in_line_edit = dialog.line_country.text() is None or dialog.line_country.text() == ''
+        country_in_combobox = dialog.cb_country.currentText() is None or dialog.cb_country.currentText() == ''
+
+        if not country_in_line_edit:
+            entered_country = dialog.line_country.text()
+            add_country_inst = AddLocation(entered_continent=entered_continent,
+                                           entered_country=entered_country)
+            add_country_inst.add_new_country()
+        else:
+            entered_country = dialog.cb_country.currentText()
 
 
 

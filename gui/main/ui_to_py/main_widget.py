@@ -5,11 +5,11 @@
 ########################################################################################################################
 import sys
 
+from PyQt5 import QtCore
 from PyQt5.QtWidgets import QMainWindow, QApplication, QDialog
 
-import sqlalchemy
-
-# from gui.common_widget.dialog_widget.popup_add_data import AddLocation, AddTourType, AddEventType, SurferToHeat
+# from gui.common_widget.dialog_widget.popup_add_data import AddLocationDialog, AddTourType, AddEventType, SurferToHeat
+from gui.common_widget.dialog_widget.popup_add_data import AddLocationDialog
 from gui.main.ui_to_py.wsl_analytics_ui_v2_0 import Ui_Form
 from src.models import AddTour, AddLocation, AddSurfer, LocationLists
 
@@ -22,14 +22,14 @@ class MainWidget(QMainWindow, Ui_Form):
         # Call the constructor for the inherited QWidget class.
         QMainWindow.__init__(self)
 
-        # Instances for AddLocation
+        # Instances for AddLocationDialog
         add_loc_inst = AddLocation()
 
         # This function is inherited from the Ui_Form class.
         self.setupUi(self)
 
         # Call the connect_slots function to connect all the event-handlers to functions in this class.
-        # self.connect_slots()
+        self.connect_slots()
 
         # Call to setup everything on the gui.
         self.on_startup()
@@ -112,21 +112,30 @@ class MainWidget(QMainWindow, Ui_Form):
     # Change Country List when a Continent is selected
     def slot_cb_addbreak_continent_on_index_change(self):
         self.cb_addbreak_country.clear()
-        entered_continent = self.cb_addbreak_continent.currentText()
-
-        # Add the countries to the country combo box.
-        return_country_inst = LocationLists(entered_continent=entered_continent)
-        # self.cb_addbreak_country.addItems([''] + return_country_inst.return_countries_from_continents())
-        self.cb_addbreak_country.addItems([''] + ['Hawaii', 'and stuff'])
+        return_country_inst = LocationLists(entered_continent=self.cb_addbreak_continent.currentText())
+        self.cb_addbreak_country.addItems([''] + return_country_inst.return_countries_from_continents())
 
     # Change Region List when a Country is selected
     def slot_cb_addbreak_country_on_index_change(self):
-        pass
+        self.cb_addbreak_region.clear()
+        return_region_inst = LocationLists(entered_continent=self.cb_addbreak_continent.currentText(),
+                                           entered_country=self.cb_addbreak_country.currentText())
+        self.cb_addbreak_region.addItems([''] + return_region_inst.return_regions_from_countries())
 
     # Open a PopUp to enter new location when The Add Location Button is selected
     # noinspection PyMethodMayBeStatic
     def slot_pb_addbreak_newloc_clicked(self):
-        pass
+        dialog = AddLocationDialog(title="Add a location to the database.",
+                                   prev_selected_continent=self.cb_addbreak_continent.currentText(),
+                                   prev_selected_country=self.cb_addbreak_country.currentText(),
+                                   prev_selected_region=self.cb_addbreak_region.currentText())
+
+        if dialog.exec() == QDialog.Accepted:
+            continent = dialog.cb_continent.currentText()
+
+
+
+
 
     # Clear the form when the Clear button is checked
     def slot_pb_addbreak_clear_clicked(self):
@@ -136,6 +145,8 @@ class MainWidget(QMainWindow, Ui_Form):
     def slot_pb_addbreak_submit_clicked(self):
         pass
 
+    def testing(self):
+        print(f"I'm in testing")
 
 ####################################################################################################################
 # Add Surfer Tab

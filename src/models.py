@@ -1476,20 +1476,41 @@ class LocationLists:
         for country in query:
             country_list.append(country[0])
 
+        session.close()
+
         return country_list
+
+    def return_regions_from_countries(self):
+        session = Session()
+
+        query = session.query(Region.region)\
+                       .join(Country)\
+                       .join(Continent)\
+                       .filter(Continent.continent == {self.entered_continent},
+                               Country.country == {self.entered_country})
+
+        region_list = []
+        for region in query:
+            region_list.append(region[0])
+
+        session.close()
+
+        return region_list
+
+
 
 ########################################################################################################################
 # 6.0 - Testing
 
 
 # # Enter a New Country
-# inst = AddLocation(entered_continent='North America',
+# inst = AddLocationDialog(entered_continent='North America',
 #                    entered_country='USA')
 # inst.add_new_country()
 
 
 # # Enter a New Region
-# inst = AddLocation(entered_continent='South America',
+# inst = AddLocationDialog(entered_continent='South America',
 #                    entered_country='Brazil',
 #                    entered_region='Sao Paulo')
 #
@@ -1497,7 +1518,7 @@ class LocationLists:
 
 
 # # Enter a New City
-# inst = AddLocation(entered_continent='North America',
+# inst = AddLocationDialog(entered_continent='North America',
 #                    entered_country='Hawaii',
 #                    entered_region='Oahu',
 #                    entered_city='Honolulu')
@@ -1505,7 +1526,7 @@ class LocationLists:
 # inst.add_new_city()
 
 # # Enter a New Break
-# inst = AddLocation(entered_continent='North America',
+# inst = AddLocationDialog(entered_continent='North America',
 #                    entered_country='Hawaii',
 #                    entered_region='Oahu',
 #                    entered_break_name='Pipeline',

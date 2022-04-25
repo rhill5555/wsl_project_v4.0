@@ -162,6 +162,17 @@ class MainWidget(QMainWindow, Ui_Form):
         else:
             entered_region = dialog.cb_region.currentText()
 
+        # Grab City from line edit
+        if dialog.line_city.text() is None or dialog.line_city == '':
+            print(f"\nEnter a city.\n")
+        else:
+            entered_city = dialog.line_city.text()
+            add_city_inst = AddLocation(entered_continent=entered_continent,
+                                        entered_country=entered_country,
+                                        entered_region=entered_region,
+                                        entered_city=entered_city)
+            add_city_inst.add_new_city()
+
     # Clear the form when the Clear button is checked
     def slot_pb_addbreak_clear_clicked(self):
         pass

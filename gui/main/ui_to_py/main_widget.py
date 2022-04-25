@@ -135,8 +135,7 @@ class MainWidget(QMainWindow, Ui_Form):
 
         entered_continent = dialog.cb_continent.currentText()
 
-        # If country was entered into line edit use that value.
-        # Otherwise no new country is required.
+        # If country was entered into line edit use that value. Else use combobox.
         country_in_line_edit = dialog.line_country.text() is None or dialog.line_country.text() == ''
         country_in_combobox = dialog.cb_country.currentText() is None or dialog.cb_country.currentText() == ''
         if not country_in_line_edit:
@@ -149,7 +148,19 @@ class MainWidget(QMainWindow, Ui_Form):
         else:
             entered_country = dialog.cb_country.currentText()
 
-
+        # If region was entered into line edit use that value. Else use combobox.
+        region_in_line_edit = dialog.line_region.text() is None or dialog.line_region.text() == ''
+        region_in_combobox = dialog.cb_region.currentText() is None or dialog.cb_region.currentText() == ''
+        if not region_in_line_edit:
+            entered_region = dialog.line_region.text()
+            add_region_inst = AddLocation(entered_continent=entered_continent,
+                                          entered_country=entered_country,
+                                          entered_region=entered_region)
+            add_region_inst.add_new_region()
+        elif region_in_combobox:
+            print(f"\nSelect or enter a region.\n")
+        else:
+            entered_region = dialog.cb_region.currentText()
 
     # Clear the form when the Clear button is checked
     def slot_pb_addbreak_clear_clicked(self):

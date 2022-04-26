@@ -4,6 +4,7 @@
 # Main Python Code for GUI
 ########################################################################################################################
 import sys
+import re
 
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QMainWindow, QApplication, QDialog
@@ -33,6 +34,24 @@ class MainWidget(QMainWindow, Ui_Form):
 
         # Call to setup everything on the gui.
         self.on_startup()
+
+    div_dict = {'input_error': ['Input Error', '=', 60],
+                'wipe_out_wav': ['Wipe Out', '~', 60]}
+
+    # Check for float
+    def check_for_float(self,
+                        check_string_for_float: str) -> float:
+
+        okay_characters = "0123456789."
+        if all([char in okay_characters for char in check_string_for_float]):
+            return float(check_string_for_float)
+        else:
+            float_not_entered = (f"\n"
+                                 f"\n{self.div_dict['wipe_out_wav'][0]:{self.div_dict['wipe_out_wav'][1]}^{self.div_dict['wipe_out_wav'][2]}}"
+                                 f"\nYou're confused. This should be a number."
+                                 f"\nEntered Value: {check_string_for_float}")
+            print(float_not_entered)
+            raise ValueError()
 
     # This defines the event handlers for everything on the Main Widget
     def connect_slots(self):
@@ -175,14 +194,118 @@ class MainWidget(QMainWindow, Ui_Form):
 
     # Clear the form when the Clear button is checked
     def slot_pb_addbreak_clear_clicked(self):
-        pass
+        self.cb_addbreak_continent.clear()
+        self.cb_addbreak_continent.addItems([''] + self.add_region_instance.return_continents())
+        self.cb_addbreak_country.clear()
+        self.cb_addbreak_region.clear()
+        self.line_addbreak_break.clear()
+        self.check_addbreak_ability_green.setChecked(0)
+        self.check_addbreak_ability_yellow.setChecked(0)
+        self.check_addbreak_ability_red.setChecked(0)
+        self.check_addbreak_burn_green.setChecked(0)
+        self.check_addbreak_burn_yellow.setChecked(0)
+        self.check_addbreak_burn_red.setChecked(0)
+        self.check_addbreak_beach.setChecked(0)
+        self.check_addbreak_point.setChecked(0)
+        self.check_addbreak_reef.setChecked(0)
+        self.check_addbreak_river.setChecked(0)
+        self.check_addbreak_sandbar.setChecked(0)
+        self.check_addbreak_jetty.setChecked(0)
+        self.check_addbreak_eng.setChecked(0)
+        self.line_addbreak_clean.clear()
+        self.line_addbreak_blown.clear()
+        self.line_addbreak_small.clear()
 
     # When the Submit button is clicked all data should be assigned a variable, prepared, and inserted into mysal db
     def slot_pb_addbreak_submit_clicked(self):
-        pass
 
-    def testing(self):
-        print(f"I'm in testing")
+        # Assign Location Infor
+        entered_continent = self.cb_addbreak_continent.currentText()
+        entered_country = self.cb_addbreak_country.currentText()
+        entered_region = self.cb_addbreak_region.currentText()
+        entered_break_name = self.line_addbreak_break.text()
+
+        # Grab Break Type based on which types are checked
+        break_type_list = []
+        if self.check_addbreak_beach.isChecked():
+            break_type_list.append('Beach')
+        if self.check_addbreak_point.isChecked():
+            break_type_list.append('Point')
+        if self.check_addbreak_reef.isChecked():
+            break_type_list.append('Reef')
+        if self.check_addbreak_river.isChecked():
+            break_type_list.append('River')
+        if self.check_addbreak_sandbar.isChecked():
+            break_type_list.append('Sandbar')
+        if self.check_addbreak_jetty.isChecked():
+            break_type_list.append('Jetty')
+        if self.check_addbreak_eng.isChecked():
+            break_type_list.append('Engineered')
+
+        # Turn List of break types into a string for mysql table
+        # If break type is unknown assign None
+        entered_break_type = ", ".join(break_type_list) if not ", ".join(break_type_list) == "" else None
+
+        # Assign Reliability and if unknown assign None
+        entered_reliability = self.cb_addbreak_reliability.currentText() if not \
+            self.cb_addbreak_reliability.currentText() == "" else None
+
+        # Assign ability level
+        ability_list = []
+        if self.check_addbreak_ability_green.isChecked():
+            ability_list.append('Beginner')
+        if self.check_addbreak_ability_yellow.isChecked():
+            ability_list.append('Intermediate')
+        if self.check_addbreak_ability_red.isChecked():
+            ability_list.append('Advanced')
+
+        # Turn List of abilities into a string for mysql table
+        # If ability is unknown assign None
+        entered_ability = ", ".join(ability_list) if not ", ".join(ability_list) == "" else None
+
+        # Assign shoulder burn
+        shoulder_burn_list = []
+        if self.check_addbreak_burn_green.isChecked():
+            shoulder_burn_list.append('Light')
+        if self.check_addbreak_burn_yellow.isChecked():
+            shoulder_burn_list.append('Medium')
+        if self.check_addbreak_burn_red.isChecked():
+            shoulder_burn_list.append('Exhausting')
+
+        # Turn List of shoulder burn into a string for mysql table
+        # If shoulder burn is unknown assign None
+        entered_shoulder_burn = ", ".join(shoulder_burn_list) if not ", ".join(shoulder_burn_list) == "" else None
+
+        # Assign Surfability Values
+        entered_clean = self.line_addbreak_clean.text() if not \
+            self.line_addbreak_clean.text() == "" else None
+        entered_blown = self.line_addbreak_blown.text() if not \
+            self.line_addbreak_blown.text() == '' else None
+        entered_too_small = self.line_addbreak_small.text() if not \
+            self.line_addbreak_small.text() == '' else None
+
+        if entered_clean is not None:
+            entered_clean = self.check_for_float(check_string_for_float=entered_clean)
+        if entered_blown is not None:
+            entered_blown = self.check_for_float(check_string_for_float=entered_blown)
+        if entered_too_small is not None:
+            entered_too_small = self.check_for_float(check_string_for_float=entered_too_small)
+
+# # Enter a New Break
+# inst = AddLocationDialog(entered_continent='North America',
+#                    entered_country='Hawaii',
+#                    entered_region='Oahu',
+#                    entered_break_name='Pipeline',
+#                    entered_break_type='Reef',
+#                    entered_reliability='Consistent',
+#                    entered_ability=None,
+#                    entered_shoulder_burn=None,
+#                    entered_clean=44,
+#                    entered_blown_out=36,
+#                    entered_too_small=20)
+#
+# inst.add_new_break()
+
 
 ####################################################################################################################
 # Add Surfer Tab

@@ -291,20 +291,20 @@ class MainWidget(QMainWindow, Ui_Form):
         if entered_too_small is not None:
             entered_too_small = self.check_for_float(check_string_for_float=entered_too_small)
 
-# # Enter a New Break
-# inst = AddLocationDialog(entered_continent='North America',
-#                    entered_country='Hawaii',
-#                    entered_region='Oahu',
-#                    entered_break_name='Pipeline',
-#                    entered_break_type='Reef',
-#                    entered_reliability='Consistent',
-#                    entered_ability=None,
-#                    entered_shoulder_burn=None,
-#                    entered_clean=44,
-#                    entered_blown_out=36,
-#                    entered_too_small=20)
-#
-# inst.add_new_break()
+        # Enter a New Break
+        add_new_break = AddLocation(entered_continent=entered_continent,
+                                    entered_country=entered_country,
+                                    entered_region=entered_region,
+                                    entered_break_name=entered_break_name,
+                                    entered_break_type=entered_break_type,
+                                    entered_reliability=entered_reliability,
+                                    entered_ability=entered_ability,
+                                    entered_shoulder_burn=entered_shoulder_burn,
+                                    entered_clean=entered_clean,
+                                    entered_blown_out=entered_blown,
+                                    entered_too_small=entered_too_small)
+
+        add_new_break.add_new_break()
 
 
 ####################################################################################################################
